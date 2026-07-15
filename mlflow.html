@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ch 8 · MLflow & ML Platform — Databricks FDE Mastery</title>
+    <link rel="icon" type="image/svg+xml"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect x='10' y='10' width='80' height='80' rx='15' fill='%23ff5a36'/><path d='M30 50 L45 65 L70 35' stroke='white' stroke-width='8' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>">
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <div class="container">
+
+        <nav class="navbar">
+            <div class="brand">Databricks <span>FDE</span> Mastery</div>
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="architecture_and_pricing.html">Architecture</a></li>
+                <li><a href="spark_internals.html">Spark Internals</a></li>
+                <li><a href="performance_tuning.html">Performance</a></li>
+                <li><a href="unity_catalog_and_security.html">Governance</a></li>
+                <li><a href="delta_live_tables.html">DLT</a></li>
+                <li><a href="streaming.html">Streaming</a></li>
+                <li><a href="iac_and_ci_cd.html">IaC & CI/CD</a></li>
+                <li><a href="mlflow.html" class="active">MLflow</a></li>
+                <li><a href="cost_governance.html">Cost/FinOps</a></li>
+                <li><a href="glossary.html">Glossary</a></li>
+                <li><a href="interview_question_bank.html">Q&A Bank</a></li>
+                <li><a href="mosaic_ai.html">Mosaic AI</a></li>
+            </ul>
+        </nav>
+
+        <header class="content-header">
+            <div class="eyebrow">Chapter 8 · Specialize</div>
+            <h1>MLflow & the Databricks ML Platform</h1>
+            <p>FDEs are increasingly asked to stand up the ML lifecycle, not just data pipelines. You don't need to be a
+                data scientist, but you must be able to explain and deploy the platform plumbing: experiment tracking,
+                the Model Registry (now in Unity Catalog), model serving, and the Feature Store. This chapter gives you
+                exactly that operational fluency.</p>
+            <div class="reading-meta"><span>⏱️ ~2.5 hours</span><span>🧪 1 lab</span><span>🎯 7 interview
+                    questions</span><span class="badge badge-mixed" style="margin:0">Tracking FREE, Serving PAID</span>
+            </div>
+        </header>
+
+        <div class="grid-layout">
+            <main class="main-content">
+
+                <section class="section-card anchor-offset" id="lifecycle">
+                    <span class="badge badge-free">Open-source MLflow runs anywhere</span>
+                    <h2>8.1 The Four MLflow Components</h2>
+                    <p>MLflow is an open-source framework (created by Databricks) covering the ML lifecycle. Know the
+                        four pillars and what each solves.</p>
+                    <div class="table-scroll">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Component</th>
+                                    <th>Solves</th>
+                                    <th>Key objects</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>Tracking</strong></td>
+                                    <td>"Which run/params produced this metric?"</td>
+                                    <td>Experiments, runs, params, metrics, artifacts.</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Models</strong></td>
+                                    <td>Package a model in a standard "flavor" so anything can serve it.</td>
+                                    <td>The MLmodel format, flavors (sklearn, pyfunc…).</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Model Registry</strong></td>
+                                    <td>Versioning, aliases, and governance of models.</td>
+                                    <td>Registered models, versions, aliases/stages.</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Serving / Deployment</strong></td>
+                                    <td>Expose a model as a REST endpoint or batch scorer.</td>
+                                    <td>Serving endpoints, batch inference.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <section class="section-card anchor-offset" id="tracking">
+                    <span class="badge badge-free">Tracking works on Community/Free Edition</span>
+                    <h2>8.2 Experiment Tracking</h2>
+                    <p>Every training run logs its parameters, metrics, and artifacts so results are reproducible and
+                        comparable. On Databricks, autologging captures most of this automatically.</p>
+                    <div class="code-label">Python — explicit tracking + autolog</div>
+                    <pre><code>import mlflow
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import f1_score
+
+mlflow.sklearn.autolog()                     <span class="comment"># auto-captures params, metrics, model</span>
+
+with mlflow.start_run(run_name="rf_baseline") as run:
+    model = RandomForestClassifier(n_estimators=200, max_depth=8)
+    model.fit(X_train, y_train)
+    preds = model.predict(X_test)
+    mlflow.log_metric("f1", f1_score(y_test, preds))   <span class="comment"># extra custom metric</span>
+    mlflow.log_param("feature_set", "v3")
+    print(run.info.run_id)                    <span class="comment"># reference this run later</span></code></pre>
+                    <div class="box strategy-box">
+                        <h4>FDE value-add</h4>
+                        <p>Set a shared experiment path in a Unity Catalog schema so a customer's whole team logs to one
+                            governed, searchable place instead of scattered notebooks — instant reproducibility and
+                            auditability.</p>
+                    </div>
+                </section>
+
+                <section class="section-card anchor-offset" id="registry">
+                    <span class="badge badge-paid">Models-in-UC needs a cloud workspace</span>
+                    <h2>8.3 Model Registry in Unity Catalog</h2>
+                    <p>Databricks now registers models as first-class Unity Catalog objects
+                        (<code>catalog.schema.model</code>), so the same RBAC, lineage, and audit you learned in Chapter
+                        4 apply to models. Modern practice uses <strong>aliases</strong> (e.g. <code>@champion</code>,
+                        <code>@challenger</code>) instead of the legacy Staging/Production stages.</p>
+                    <div class="code-label">Register a run's model and set an alias</div>
+                    <pre><code>mlflow.set_registry_uri("databricks-uc")
+
+model_uri = f"runs:/{run_id}/model"
+mlflow.register_model(model_uri, "main.ml.churn_model")   <span class="comment"># -> version N</span>
+
+from mlflow import MlflowClient
+c = MlflowClient()
+c.set_registered_model_alias("main.ml.churn_model", "champion", version=3)
+
+<span class="comment"># Load whatever is currently champion — deployment code never changes</span>
+prod = mlflow.pyfunc.load_model("models:/main.ml.churn_model@champion")</code></pre>
+                    <div class="box decision-box">
+                        <h4>Interview framing: aliases vs stages</h4>
+                        <p>"Stages (Staging/Production) were a fixed lifecycle. UC aliases are flexible pointers — I
+                            promote by moving <code>@champion</code> to a new version, enabling clean blue/green and A/B
+                            (<code>@challenger</code>) without touching serving code."</p>
+                    </div>
+                </section>
+
+                <section class="section-card anchor-offset" id="serving">
+                    <span class="badge badge-paid">Serving endpoints are a paid feature</span>
+                    <h2>8.4 Deployment — Batch vs Real-Time Serving</h2>
+                    <ul>
+                        <li><strong>Batch inference:</strong> load the model as a Spark UDF and score a whole table.
+                            Cheapest, highest throughput, no always-on cost.</li>
+                        <li><strong>Real-time serving:</strong> Databricks Model Serving hosts the model behind an
+                            autoscaling REST endpoint (scales to zero when idle). Use only when you need low-latency,
+                            per-request predictions.</li>
+                    </ul>
+                    <div class="code-label">Batch scoring with a registered model as a Spark UDF</div>
+                    <pre><code>import mlflow
+predict = mlflow.pyfunc.spark_udf(spark, "models:/main.ml.churn_model@champion")
+scored = spark.table("main.ml.customers_features").withColumn("churn_prob", predict("*"))
+scored.write.mode("overwrite").saveAsTable("main.ml.churn_scores")</code></pre>
+                    <div class="box pricing-box">
+                        <h4>📊 Cost decision</h4>
+                        <p>Real-time endpoints cost money whenever provisioned (even scale-to-zero has cold-start/uptime
+                            tradeoffs). If the customer only needs nightly scores, batch UDF inference is often 10×+
+                            cheaper. Always ask "what's the latency SLA?" before recommending real-time serving.</p>
+                    </div>
+                </section>
+
+                <section class="section-card anchor-offset" id="featurestore">
+                    <span class="badge badge-paid">Feature Store needs a cloud workspace</span>
+                    <h2>8.5 Feature Store (Feature Engineering in UC)</h2>
+                    <p>The Feature Store lets teams publish reusable feature tables and guarantees the <strong>same
+                            feature computation at training and inference</strong> (eliminating train/serve skew).
+                        Features are Delta tables in Unity Catalog with lineage to the models that consume them.</p>
+                    <ul>
+                        <li><strong>Offline store:</strong> Delta tables for training/batch scoring.</li>
+                        <li><strong>Online store:</strong> a low-latency key-value store synced for real-time lookups
+                            during serving.</li>
+                        <li><strong>Lineage:</strong> UC tracks which model version used which feature table version —
+                            critical for audits.</li>
+                    </ul>
+                </section>
+
+                <section class="section-card anchor-offset" id="lab">
+                    <span class="badge badge-free">Steps 1–3 FREE; 4–5 need cloud</span>
+                    <h2>8.6 Hands-On Lab — Track, Register, Score</h2>
+                    <ol>
+                        <li>Train a simple sklearn model in a notebook with <code>mlflow.sklearn.autolog()</code> and a
+                            couple of custom metrics.</li>
+                        <li>Open the <strong>Experiments</strong> UI; compare two runs with different hyperparameters
+                            side by side.</li>
+                        <li>Pick the best run and note its <code>run_id</code>.</li>
+                        <li>(Cloud) Register the model into a UC schema and set the <code>@champion</code> alias.</li>
+                        <li>(Cloud) Batch-score a feature table using the <code>spark_udf</code> loader and write
+                            predictions to a Delta table.</li>
+                    </ol>
+                </section>
+
+                <section class="section-card anchor-offset" id="qa">
+                    <h2>8.7 Interview Questions & Model Answers</h2>
+                    <details class="qa">
+                        <summary><span class="q-text">Walk me through the ML lifecycle on Databricks.</span></summary>
+                        <div class="qa-body">
+                            <div class="tell"><strong>Testing:</strong> end-to-end platform fluency.</div>Feature
+                            engineering into Feature Store tables → training with MLflow Tracking (autolog
+                            params/metrics/artifacts) → register the best model into the Unity Catalog Model Registry
+                            with a version and alias → deploy via batch UDF scoring or a real-time serving endpoint →
+                            monitor and promote new versions by moving the champion alias. Everything is governed by UC
+                            RBAC and lineage.
+                        </div>
+                    </details>
+                    <details class="qa">
+                        <summary><span class="q-text">Why register models in Unity Catalog vs the legacy workspace
+                                registry?</span></summary>
+                        <div class="qa-body">
+                            <div class="tell"><strong>Testing:</strong> current best practice.</div>UC makes models
+                            first-class governed objects with the same RBAC, lineage, and audit as tables, and works
+                            cross-workspace. It uses aliases instead of fixed stages, enabling flexible promotion and
+                            A/B. It's the recommended approach today.
+                        </div>
+                    </details>
+                    <details class="qa">
+                        <summary><span class="q-text">Batch vs real-time serving — how do you choose?</span></summary>
+                        <div class="qa-body">
+                            <div class="tell"><strong>Testing:</strong> cost/architecture judgement.</div>By latency
+                            SLA. If predictions are consumed on a schedule (dashboards, nightly campaigns), batch UDF
+                            scoring is far cheaper and simpler. Real-time serving is for per-request, low-latency needs
+                            (fraud checks, recommendations) and adds endpoint cost and ops.
+                        </div>
+                    </details>
+                    <details class="qa">
+                        <summary><span class="q-text">What problem does the Feature Store solve?</span></summary>
+                        <div class="qa-body">
+                            <div class="tell"><strong>Testing:</strong> understanding train/serve skew.</div>It
+                            guarantees identical feature computation at training and inference, prevents duplicated
+                            feature logic across teams, and provides lineage from features to models. Offline store for
+                            training, online store for low-latency serving lookups.
+                        </div>
+                    </details>
+                    <details class="qa">
+                        <summary><span class="q-text">What does mlflow autolog capture and why is it useful?</span>
+                        </summary>
+                        <div class="qa-body">
+                            <div class="tell"><strong>Testing:</strong> reproducibility.</div>It automatically logs
+                            framework params, metrics, the model artifact, and often input signatures, without manual
+                            log calls. It makes every run reproducible and comparable, which is the foundation of
+                            trustworthy ML delivery.
+                        </div>
+                    </details>
+                    <details class="qa">
+                        <summary><span class="q-text">How would you implement champion/challenger?</span></summary>
+                        <div class="qa-body">
+                            <div class="tell"><strong>Testing:</strong> deployment patterns.</div>Register both models;
+                            set <code>@champion</code> on the current best and <code>@challenger</code> on the
+                            candidate. Serving loads by alias, so I can route a fraction of traffic to challenger or
+                            shadow-score it, compare metrics, then promote by moving the champion alias — no code
+                            change.
+                        </div>
+                    </details>
+                    <details class="qa">
+                        <summary><span class="q-text">What's available on Community Edition for ML?</span></summary>
+                        <div class="qa-body">
+                            <div class="tell"><strong>Testing:</strong> tier honesty.</div>MLflow tracking and local
+                            training work for learning. UC Model Registry, serving endpoints, and Feature Store need a
+                            full cloud workspace.
+                        </div>
+                    </details>
+                </section>
+
+                <div class="page-nav">
+                    <a href="iac_and_ci_cd.html">
+                        <div class="dir">◀ Previous</div>
+                        <div class="pg-title">Ch 7 · IaC & CI/CD</div>
+                    </a>
+                    <a class="next" href="cost_governance.html">
+                        <div class="dir">Next ▶</div>
+                        <div class="pg-title">Ch 9 · Cost Governance / FinOps</div>
+                    </a>
+                </div>
+            </main>
+
+            <aside class="sidebar-panel">
+                <div class="side-card">
+                    <h3>On This Page</h3>
+                    <ul class="toc">
+                        <li><a href="#lifecycle">8.1 Four Components</a></li>
+                        <li><a href="#tracking">8.2 Tracking</a></li>
+                        <li><a href="#registry">8.3 Model Registry (UC)</a></li>
+                        <li><a href="#serving">8.4 Batch vs Real-Time</a></li>
+                        <li><a href="#featurestore">8.5 Feature Store</a></li>
+                        <li><a href="#lab">8.6 Hands-On Lab</a></li>
+                        <li><a href="#qa">8.7 Interview Q&A</a></li>
+                    </ul>
+                </div>
+                <div class="side-card">
+                    <h3>Remember</h3>
+                    <p>Tracking → Models → Registry → Serving.</p>
+                    <p><strong>Aliases</strong> (@champion) replaced Staging/Production stages.</p>
+                    <p>Ask for the <strong>latency SLA</strong> before recommending real-time serving.</p>
+                </div>
+            </aside>
+        </div>
+
+    </div>
+</body>
+
+</html>

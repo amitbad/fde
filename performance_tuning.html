@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FDE Prep: Performance Tuning & Spark UI</title>
+    <link rel="icon" type="image/svg+xml"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect x='10' y='10' width='80' height='80' rx='15' fill='%23ff5a36'/><path d='M30 50 L45 65 L70 35' stroke='white' stroke-width='8' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>">
+    <style>
+        :root {
+            --color-bg: #f8fafc;
+            --color-card-bg: #ffffff;
+            --color-text-primary: #0f172a;
+            --color-text-secondary: #334155;
+            --color-text-muted: #64748b;
+            --color-brand-primary: #ff5a36;
+            /* Databricks Orange */
+            --color-brand-secondary: #0f172a;
+            /* Dark Slate */
+            --color-accent-blue: #2563eb;
+            --color-accent-teal: #0d9488;
+            --color-accent-green: #10b981;
+            --color-accent-orange: #ea580c;
+            --color-border: #cbd5e1;
+            --color-border-light: #e2e8f0;
+            --border-radius: 16px;
+            --border-radius-sm: 8px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+            background-color: var(--color-bg);
+            color: var(--color-text-primary);
+            line-height: 1.65;
+            font-size: 16px;
+        }
+
+        .container {
+            width: 95%;
+            max-width: 1500px;
+            margin: 0 auto;
+            padding: 2.5rem 0;
+        }
+
+        /* Top Navigation Bar */
+        .navbar {
+            background-color: var(--color-brand-secondary);
+            color: #ffffff;
+            padding: 1.25rem 2rem;
+            border-radius: var(--border-radius);
+            margin-bottom: 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 15px rgba(15, 23, 42, 0.15);
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .navbar .brand {
+            font-size: 1.35rem;
+            font-weight: 800;
+            letter-spacing: -0.025em;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .navbar .brand span {
+            color: var(--color-brand-primary);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 1.25rem;
+            list-style: none;
+            flex-wrap: wrap;
+        }
+
+        .nav-links a {
+            color: #cbd5e1;
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 600;
+            padding: 0.5rem 0.85rem;
+            border-radius: var(--border-radius-sm);
+            transition: all 0.2s ease;
+        }
+
+        .nav-links a:hover,
+        .nav-links a.active {
+            color: #ffffff;
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        /* Content Header */
+        .content-header {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            color: #ffffff;
+            padding: 2.5rem;
+            border-radius: var(--border-radius);
+            margin-bottom: 2.5rem;
+            box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.1);
+        }
+
+        .content-header h1 {
+            font-size: 2rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+        }
+
+        .content-header p {
+            color: #94a3b8;
+            font-size: 1.05rem;
+        }
+
+        /* Badges */
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 1rem;
+        }
+
+        .badge-paid {
+            background-color: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fca5a5;
+        }
+
+        .badge-free {
+            background-color: #dcfce7;
+            color: #15803d;
+            border: 1px solid #86efac;
+        }
+
+        /* Standard Content Sections */
+        .grid-layout {
+            display: grid;
+            grid-template-columns: 2.2fr 1fr;
+            gap: 2.5rem;
+        }
+
+        @media (max-width: 1200px) {
+            .grid-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            gap: 2.5rem;
+        }
+
+        .section-card {
+            background-color: #ffffff;
+            border-radius: var(--border-radius);
+            border: 1px solid var(--color-border-light);
+            padding: 2.5rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+        }
+
+        .section-card h2 {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--color-brand-secondary);
+            margin-bottom: 1.25rem;
+            border-bottom: 2px solid #f1f5f9;
+            padding-bottom: 0.5rem;
+        }
+
+        .section-card h3 {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: var(--color-text-primary);
+            margin: 1.5rem 0 0.75rem;
+        }
+
+        .section-card p {
+            font-size: 1rem;
+            color: var(--color-text-secondary);
+            margin-bottom: 1.25rem;
+            line-height: 1.7;
+        }
+
+        .section-card ul {
+            list-style: none;
+            margin-bottom: 1.25rem;
+        }
+
+        .section-card ul li {
+            position: relative;
+            padding-left: 1.5rem;
+            margin-bottom: 0.75rem;
+            font-size: 0.95rem;
+            color: var(--color-text-secondary);
+        }
+
+        .section-card ul li::before {
+            content: "•";
+            color: var(--color-brand-primary);
+            font-weight: bold;
+            font-size: 1.2rem;
+            position: absolute;
+            left: 0;
+            top: -0.1rem;
+        }
+
+        /* Block Callouts */
+        .strategy-box {
+            background-color: #ecfdf5;
+            border-left: 4px solid var(--color-accent-green);
+            padding: 1.5rem;
+            border-radius: 0 var(--border-radius-sm) var(--border-radius-sm) 0;
+            margin-bottom: 1.5rem;
+        }
+
+        .strategy-box h4 {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #065f46;
+            margin-bottom: 0.5rem;
+        }
+
+        .strategy-box p {
+            font-size: 0.925rem;
+            color: #065f46;
+            margin-bottom: 0;
+        }
+
+        .decision-box {
+            background-color: #f0f9ff;
+            border-left: 4px solid var(--color-accent-blue);
+            padding: 1.5rem;
+            border-radius: 0 var(--border-radius-sm) var(--border-radius-sm) 0;
+            margin-bottom: 1.5rem;
+        }
+
+        .decision-box h4 {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #0c4a6e;
+            margin-bottom: 0.5rem;
+        }
+
+        .decision-box p {
+            font-size: 0.925rem;
+            color: #0c4a6e;
+            margin-bottom: 0;
+        }
+
+        .pricing-box {
+            background-color: #fff7ed;
+            border-left: 4px solid var(--color-accent-orange);
+            padding: 1.5rem;
+            border-radius: 0 var(--border-radius-sm) var(--border-radius-sm) 0;
+            margin-bottom: 1.5rem;
+        }
+
+        .pricing-box h4 {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #854d0e;
+            margin-bottom: 0.5rem;
+        }
+
+        .pricing-box p {
+            font-size: 0.925rem;
+            color: #7c2d12;
+            margin-bottom: 0;
+        }
+
+        /* Code Block */
+        pre {
+            background-color: var(--color-brand-secondary);
+            color: #e2e8f0;
+            padding: 1.25rem;
+            border-radius: var(--border-radius-sm);
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.875rem;
+            overflow-x: auto;
+            margin-bottom: 1.25rem;
+            border: 1px solid #334155;
+        }
+
+        /* Sidebar Cards */
+        .sidebar-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+            position: sticky;
+            top: 2rem;
+        }
+
+        .side-card {
+            background-color: #ffffff;
+            border-radius: var(--border-radius);
+            border: 1px solid var(--color-border-light);
+            padding: 2rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+        }
+
+        .side-card h3 {
+            font-size: 1.15rem;
+            font-weight: 800;
+            color: var(--color-brand-secondary);
+            margin-bottom: 1rem;
+            border-bottom: 2px solid #f1f5f9;
+            padding-bottom: 0.5rem;
+        }
+
+        .checklist {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .checklist-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+            color: var(--color-text-secondary);
+        }
+
+        .checklist-item::before {
+            content: "⬜";
+            font-size: 0.8rem;
+            margin-top: 0.15rem;
+        }
+
+        .checklist-item.checked::before {
+            content: "✅";
+        }
+
+        /* Comparison Table */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+            font-size: 0.9rem;
+            border: 1px solid var(--color-border-light);
+            border-radius: var(--border-radius-sm);
+            overflow: hidden;
+        }
+
+        th {
+            background-color: #f1f5f9;
+            font-weight: 700;
+            color: var(--color-brand-secondary);
+            text-align: left;
+            padding: 0.85rem 1.25rem;
+            border-bottom: 2px solid var(--color-border);
+        }
+
+        td {
+            padding: 0.85rem 1.25rem;
+            border-bottom: 1px solid var(--color-border-light);
+            color: var(--color-text-secondary);
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+    </style>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+
+    <div class="container">
+
+        <!-- Navigation Bar -->
+        <nav class="navbar">
+            <div class="brand">Databricks <span>FDE</span> Mastery</div>
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="architecture_and_pricing.html">Architecture</a></li>
+                <li><a href="spark_internals.html">Spark Internals</a></li>
+                <li><a href="performance_tuning.html" class="active">Performance</a></li>
+                <li><a href="unity_catalog_and_security.html">Governance</a></li>
+                <li><a href="delta_live_tables.html">DLT</a></li>
+                <li><a href="streaming.html">Streaming</a></li>
+                <li><a href="iac_and_ci_cd.html">IaC & CI/CD</a></li>
+                <li><a href="mlflow.html">MLflow</a></li>
+                <li><a href="cost_governance.html">Cost/FinOps</a></li>
+                <li><a href="glossary.html">Glossary</a></li>
+                <li><a href="interview_question_bank.html">Q&A Bank</a></li>
+                <li><a href="mosaic_ai.html">Mosaic AI</a></li>
+            </ul>
+        </nav>
+
+        <!-- Content Header -->
+        <header class="content-header">
+            <h1>Advanced Spark Tuning & Spark UI Archaeology</h1>
+            <p>Diagnose and resolve performance bottlenecks like disk spills, data skew, and shuffle limits using Spark
+                UI, Photon, and Liquid Clustering.</p>
+        </header>
+
+        <!-- Main Layout Split -->
+        <div class="grid-layout">
+
+            <!-- Main Column -->
+            <main class="main-content">
+
+                <!-- Section 1: Spark UI Archaeology -->
+                <section class="section-card">
+                    <span class="badge badge-free">Trial / Community Compliant</span>
+                    <h2>1. Spark UI Archaeology</h2>
+                    <p>
+                        Clients hire Forward Deployment Engineers to optimize slow, expensive pipelines that run over
+                        their budgets or fail due to Out-Of-Memory (OOM) errors. FDEs diagnose performance issues using
+                        the <strong>Spark UI Event Timeline</strong>.
+                    </p>
+
+                    <h3>Core Out-of-Memory (OOM) Bottlenecks</h3>
+                    <ul>
+                        <li><strong>Driver OOM:</strong> Occurs when collecting a massive volume of data back to the
+                            master node (e.g., calling <code>.collect()</code> on a huge DataFrame) rather than writing
+                            distributed outputs directly to disk.</li>
+                        <li><strong>Executor OOM (Spill to Disk):</strong> Occurs when intermediate shuffle partition
+                            data exceeds the allocated executor RAM. Spark is forced to write data to disk (Spill to
+                            Disk), which is up to 100x slower.</li>
+                    </ul>
+
+                    <div class="decision-box">
+                        <h4>💡 Spark UI Diagnostic Pattern</h4>
+                        <p>
+                            Open the <strong>Stages Tab</strong> in Spark UI and look at the task runtimes. If 1 task is
+                            running for hours while 99 other tasks completed in seconds, you have a **Severe Data Skew**
+                            on the join key. If you see high "Spill (Disk)" metrics, you need to increase execution
+                            memory, tune partitions, or adjust VM instance sizes.
+                        </p>
+                    </div>
+                </section>
+
+                <!-- Section 2: Join Optimizations -->
+                <section class="section-card">
+                    <span class="badge badge-free">Trial / Community Compliant</span>
+                    <h2>2. Optimizing Shuffling & Joins</h2>
+                    <p>
+                        Shuffling (the physical movement of data blocks across executors over the network) is the most
+                        expensive operation in distributed computing. FDEs optimize queries by using the most efficient
+                        join strategies.
+                    </p>
+
+                    <h3>Broadcast Hash Join (Map-Side Join)</h3>
+                    <p>
+                        If one table is small (recommended under 100MB), you can force Spark to broadcast the small
+                        table to every executor, completely bypassing the expensive network shuffle phase.
+                    </p>
+                    <pre>
+# Force broadcast join in PySpark
+from pyspark.sql.functions import broadcast
+
+df_joined = large_df.join(broadcast(small_df), "join_key")
+                    </pre>
+
+                    <h3>Taming Data Skew with Hints</h3>
+                    <p>
+                        When data is heavily skewed on a specific key (e.g., null values or default account IDs), you
+                        can declare skewed join hints to force Spark to split the skewed partitions:
+                    </p>
+                    <pre>
+# Apply a skew join hint in SQL
+SELECT /*+ SKEW('orders', 'customer_id') */ *
+FROM orders
+JOIN customers ON orders.customer_id = customers.customer_id;
+                    </pre>
+                </section>
+
+                <!-- Section 3: Delta Lake Storage Architecture -->
+                <section class="section-card">
+                    <span class="badge badge-paid">Paid Cloud Subscription Required</span>
+                    <h2>3. Delta Lake Storage Strategies</h2>
+                    <p>
+                        How files are organized on disk in S3/ADLS directly impacts how quickly queries run.
+                    </p>
+
+                    <h3>Modern Liquid Clustering</h3>
+                    <p>
+                        Older Delta optimization models relied on static partitioning and Z-Ordering, which fail when
+                        query patterns change. **Liquid Clustering** dynamically clusters and reorganizes files based on
+                        actual query columns without needing to declare static partition keys.
+                    </p>
+                    <pre>
+-- Create a table optimized with Liquid Clustering
+CREATE TABLE target_sales (
+  order_id INT,
+  order_date DATE,
+  customer_id STRING
+)
+CLUSTER BY (order_date, customer_id);
+                    </pre>
+
+                    <h3>Delta Maintenance Operations</h3>
+                    <ul>
+                        <li><strong>OPTIMIZE:</strong> Compacts many small files (e.g., kilobyte-sized streaming
+                            increments) into larger 1GB files, reducing query file-seek overhead.</li>
+                        <li><strong>VACUUM:</strong> Permanently deletes historical data files older than 7 days,
+                            freeing up massive amounts of storage space.</li>
+                    </ul>
+                </section>
+
+                <!-- Section 4: Modern Compilation Engines -->
+                <section class="section-card">
+                    <span class="badge badge-paid">Paid Cloud Subscription Required</span>
+                    <h2>4. Modern Computation Engines (Photon)</h2>
+                    <p>
+                        Databricks includes specialized execution engines designed to speed up queries at a lower cost:
+                    </p>
+                    <ul>
+                        <li><strong>Photon Engine:</strong> A vectorized execution engine written in C++ that bypasses
+                            JVM execution. It processes data blocks in memory, speeding up heavy string transformations,
+                            joins, and aggregations by up to 10x.</li>
+                        <li><strong>Delta Cache:</strong> Automatically caches copies of remote S3/ADLS files onto
+                            high-speed local NVMe SSD storage on virtual machines, ensuring subsequent queries bypass
+                            network fetch latency.</li>
+                    </ul>
+
+                    <div class="pricing-box">
+                        <h4>📊 Cost/Performance Trade-off</h4>
+                        <p>
+                            While Photon-enabled VMs consume slightly more DBUs per hour, the extreme execution speedups
+                            (e.g., cutting a job's runtime from 5 hours to 30 minutes) reduce total compute hours,
+                            cutting total DBU and VM cloud provider costs in half.
+                        </p>
+                    </div>
+                </section>
+
+                <!-- Section 5: Hands-on Exercise -->
+                <section class="section-card">
+                    <span class="badge badge-free">Trial / Community Compliant</span>
+                    <h2>5. Lab: Debugging Skew & Spill in PySpark</h2>
+
+                    <h3>Objective</h3>
+                    <p>Identify severe data skew and disk spills in a join operation using Spark UI and apply optimal
+                        join hints to resolve the bottleneck.</p>
+
+                    <h3>Steps to Complete</h3>
+                    <ul>
+                        <li><strong>Step 1:</strong> Open your Databricks cluster and create a PySpark notebook.</li>
+                        <li><strong>Step 2:</strong> Generate two test dataframes. Write code to inject a severe skew
+                            (e.g., 90% of the rows in Table A have a <code>customer_id</code> value of
+                            <code>'GUEST'</code>).
+                        </li>
+                        <li><strong>Step 3:</strong> Perform a standard join on <code>customer_id</code> and trigger an
+                            action:
+                            <br><code>df_joined.write.mode("overwrite").format("noop").save()</code>
+                        </li>
+                        <li><strong>Step 4:</strong> Open the **Spark UI** for the running query. Drill down into the
+                            Stages tab. Identify the longest-running stage, open the task metrics, and observe if a
+                            single executor has a high "Shuffle Read Size" or "Spill (Disk)" compared to the others.
+                        </li>
+                        <li><strong>Step 5:</strong> Resolve the bottleneck by applying a PySpark skewed join hint to
+                            the query:
+                            <br><code>df_joined = df_large.hint("skew", "customer_id").join(df_small, "customer_id")</code>
+                        </li>
+                        <li><strong>Step 6:</strong> Re-run the query and verify in the Spark UI that tasks are now
+                            evenly distributed across executors.</li>
+                    </ul>
+                </section>
+
+                <section class="section-card">
+                    <h2>Interview Questions & Model Answers</h2>
+                    <details class="qa">
+                        <summary><span class="q-text">A nightly job takes 6 hours and OOMs; adding nodes didn't help.
+                                Diagnose.</span></summary>
+                        <div class="qa-body">
+                            <div class="tell"><strong>Testing:</strong> the flagship FDE scenario.</div>Adding nodes not
+                            helping means it's not a capacity problem — it's skew. In the Spark UI I find the long-pole
+                            task in the slow stage, confirm one huge Shuffle Read / Spill on a skewed join key. Fix with
+                            AQE skew join or salting, broadcast the small side if applicable, right-size partitions,
+                            enable Photon, and OPTIMIZE + liquid-cluster the target. Then I downsize the cluster —
+                            typically runtime drops from hours to minutes and node count falls sharply.
+                        </div>
+                    </details>
+                    <details class="qa">
+                        <summary><span class="q-text">What is spill and how do you eliminate it?</span></summary>
+                        <div class="qa-body">
+                            <div class="tell"><strong>Testing:</strong> memory model applied.</div>Spill is a task
+                            overflowing execution memory to local disk (10–100× slower), visible in the stage's Spill
+                            (Memory/Disk) columns. I reduce partition size (more partitions), fix skew so no task is
+                            oversized, remove needless wide ops, cache less, or move to memory-optimized VMs, then
+                            confirm spill hits zero.
+                        </div>
+                    </details>
+                    <details class="qa">
+                        <summary><span class="q-text">When is a broadcast join the right choice and what's the
+                                risk?</span></summary>
+                        <div class="qa-body">
+                            <div class="tell"><strong>Testing:</strong> join strategy judgement.</div>When one side is
+                            small (~under 100MB) it can be broadcast to every executor, skipping the shuffle entirely —
+                            huge win for large×small joins. The risk is broadcasting something too big, which OOMs the
+                            executors; AQE now auto-converts when a side proves small at runtime.
+                        </div>
+                    </details>
+                    <details class="qa">
+                        <summary><span class="q-text">Explain salting for skew.</span></summary>
+                        <div class="qa-body">
+                            <div class="tell"><strong>Testing:</strong> hands-on skew fix.</div>I append a random salt
+                            (0..N) to the skewed key on both sides so the hot key is split across N partitions/tasks
+                            instead of one, then aggregate away the salt. It manually achieves what AQE skew-join does
+                            automatically, and I still use it for extreme, known skew.
+                        </div>
+                    </details>
+                    <details class="qa">
+                        <summary><span class="q-text">Liquid Clustering vs partitioning + Z-Order?</span></summary>
+                        <div class="qa-body">
+                            <div class="tell"><strong>Testing:</strong> current Delta best practice.</div>Static
+                            partitioning is brittle (bad cardinality choices, small-file explosions) and Z-Order is a
+                            periodic rewrite. Liquid clustering dynamically organizes files by the columns actually
+                            queried, adapts as query patterns change, and avoids the partition-column trap — it's the
+                            recommended default now.
+                        </div>
+                    </details>
+                    <details class="qa">
+                        <summary><span class="q-text">What do OPTIMIZE and VACUUM do, and what's the danger with
+                                VACUUM?</span></summary>
+                        <div class="qa-body">
+                            <div class="tell"><strong>Testing:</strong> Delta maintenance.</div>OPTIMIZE compacts many
+                            small files into right-sized ones (fewer file seeks); VACUUM deletes unreferenced files
+                            older than the retention window (default 7 days). Danger: vacuuming below the retention
+                            breaks time travel and can corrupt readers/concurrent writers relying on old files, so I
+                            never shorten retention casually.
+                        </div>
+                    </details>
+                    <details class="qa">
+                        <summary><span class="q-text">Is Photon always faster/cheaper?</span></summary>
+                        <div class="qa-body">
+                            <div class="tell"><strong>Testing:</strong> nuance + cost.</div>For CPU-bound SQL/ETL,
+                            usually yes: higher DBU/hr but shorter runtime lowers total cost. For light or heavily
+                            Python-UDF workloads it may not engage, so I benchmark on the real workload rather than
+                            assume.
+                        </div>
+                    </details>
+                </section>
+
+            </main>
+
+            <!-- Sidebar -->
+            <aside class="sidebar-panel">
+
+                <!-- Free vs Paid Warning -->
+                <div class="side-card" style="border-top: 4px solid var(--color-accent-orange);">
+                    <h3>Trial vs. Enterprise Limits</h3>
+                    <p
+                        style="font-size: 0.85rem; color: var(--color-text-secondary); line-height: 1.5; margin-bottom: 1rem;">
+                        <strong>Databricks Community Edition</strong> lets you use PySpark, standard SQL joins, and the
+                        Spark UI, making it perfect for studying data skew and join debugging.
+                    </p>
+                    <p style="font-size: 0.85rem; color: var(--color-text-secondary); line-height: 1.5;">
+                        However, modern enterprise features like <strong>Photon engine execution</strong> and
+                        <strong>Serverless SQL Warehouses</strong> are strictly restricted on Community Edition and
+                        require a paid cloud workspace.
+                    </p>
+                </div>
+
+                <!-- Next Steps Checklist -->
+                <div class="side-card">
+                    <h3>Next Study Steps</h3>
+                    <ul class="checklist">
+                        <li class="checklist-item checked">Study the Spark Stage DAG execution flow</li>
+                        <li class="checklist-item">Memorize Broadcast Join size limits (100MB)</li>
+                        <li class="checklist-item">Practice writing Liquid Clustering table creation scripts</li>
+                        <li class="checklist-item">Identify Disk Spill values in the Spark UI</li>
+                    </ul>
+                </div>
+
+            </aside>
+
+        </div>
+
+        <div class="page-nav">
+            <a href="spark_internals.html">
+                <div class="dir">◀ Previous</div>
+                <div class="pg-title">Ch 2 · Spark Internals</div>
+            </a>
+            <a class="next" href="unity_catalog_and_security.html">
+                <div class="dir">Next ▶</div>
+                <div class="pg-title">Ch 4 · Unity Catalog & Security</div>
+            </a>
+        </div>
+
+    </div>
+
+</body>
+
+</html>

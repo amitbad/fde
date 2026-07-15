@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Databricks FDE Mastery Hub — Home</title>
+    <link rel="icon" type="image/svg+xml"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect x='10' y='10' width='80' height='80' rx='15' fill='%23ff5a36'/><path d='M30 50 L45 65 L70 35' stroke='white' stroke-width='8' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>">
+    <style class="legacy-unused">
+        :root {
+            --color-bg: #f8fafc;
+            --color-card-bg: #ffffff;
+            --color-text-primary: #0f172a;
+            --color-text-secondary: #334155;
+            --color-text-muted: #64748b;
+            --color-brand-primary: #ff5a36;
+            /* Databricks Orange */
+            --color-brand-secondary: #0f172a;
+            /* Dark Slate */
+            --color-accent-blue: #2563eb;
+            --color-accent-teal: #0d9488;
+            --color-accent-green: #10b981;
+            --color-border: #cbd5e1;
+            --color-border-light: #e2e8f0;
+            --border-radius: 16px;
+            --border-radius-sm: 8px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+            background-color: var(--color-bg);
+            color: var(--color-text-primary);
+            line-height: 1.65;
+            font-size: 16px;
+        }
+
+        .container {
+            width: 95%;
+            max-width: 1500px;
+            margin: 0 auto;
+            padding: 2.5rem 0;
+        }
+
+        /* Top Navigation Bar */
+        .navbar {
+            background-color: var(--color-brand-secondary);
+            color: #ffffff;
+            padding: 1.25rem 2rem;
+            border-radius: var(--border-radius);
+            margin-bottom: 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 15px rgba(15, 23, 42, 0.15);
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .navbar .brand {
+            font-size: 1.35rem;
+            font-weight: 800;
+            letter-spacing: -0.025em;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .navbar .brand span {
+            color: var(--color-brand-primary);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 1.25rem;
+            list-style: none;
+            flex-wrap: wrap;
+        }
+
+        .nav-links a {
+            color: #cbd5e1;
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 600;
+            padding: 0.5rem 0.85rem;
+            border-radius: var(--border-radius-sm);
+            transition: all 0.2s ease;
+        }
+
+        .nav-links a:hover,
+        .nav-links a.active {
+            color: #ffffff;
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        /* Header Style */
+        header.hero {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            color: #ffffff;
+            padding: 3rem;
+            border-radius: var(--border-radius);
+            margin-bottom: 2.5rem;
+            box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        header.hero::before {
+            content: '';
+            position: absolute;
+            top: -50px;
+            right: -50px;
+            width: 200px;
+            height: 200px;
+            background: rgba(255, 90, 54, 0.08);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        header.hero h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            letter-spacing: -0.025em;
+            margin-bottom: 0.75rem;
+            line-height: 1.2;
+        }
+
+        header.hero p {
+            color: #94a3b8;
+            font-size: 1.15rem;
+            max-width: 900px;
+            margin-bottom: 1.5rem;
+        }
+
+        .pills {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .pill {
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 0.35rem 0.85rem;
+            border-radius: 9999px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            background-color: rgba(255, 255, 255, 0.1);
+            color: #cbd5e1;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+
+        .pill-primary {
+            background-color: rgba(255, 90, 54, 0.15);
+            color: var(--color-brand-primary);
+            border-color: rgba(255, 90, 54, 0.3);
+        }
+
+        /* Career Shift Mindset Box */
+        .paradigm-shift {
+            background-color: #fffbeb;
+            border-left: 4px solid #f59e0b;
+            border-radius: var(--border-radius-sm);
+            padding: 2rem;
+            margin-bottom: 2.5rem;
+            color: #78350f;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
+        }
+
+        .paradigm-shift h2 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #92400e;
+        }
+
+        .paradigm-shift p {
+            font-size: 1rem;
+            line-height: 1.7;
+        }
+
+        /* 2-Column Main Section */
+        .content-layout {
+            display: grid;
+            grid-template-columns: 2.2fr 1fr;
+            gap: 2.5rem;
+        }
+
+        @media (max-width: 1200px) {
+            .content-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Left Side: Modular Study Blocks */
+        .modular-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 1.75rem;
+        }
+
+        @media (max-width: 600px) {
+            .modular-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .module-card {
+            background-color: var(--color-card-bg);
+            border: 1px solid var(--color-border-light);
+            border-radius: var(--border-radius);
+            padding: 2rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .module-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 20px -3px rgba(0, 0, 0, 0.04);
+            border-color: var(--color-border);
+        }
+
+        .module-header {
+            margin-bottom: 1.25rem;
+        }
+
+        .module-eyebrow {
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--color-brand-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .module-title {
+            font-size: 1.35rem;
+            font-weight: 800;
+            color: var(--color-brand-secondary);
+            margin-bottom: 0.75rem;
+        }
+
+        .module-desc {
+            font-size: 0.95rem;
+            color: var(--color-text-secondary);
+            line-height: 1.6;
+        }
+
+        .module-skills {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.4rem;
+            margin: 1.25rem 0;
+        }
+
+        .skill-tag {
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            background-color: #f1f5f9;
+            color: #475569;
+            border: 1px solid #e2e8f0;
+        }
+
+        .module-footer {
+            border-top: 1px solid #f1f5f9;
+            padding-top: 1.25rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .module-link {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--color-accent-blue);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .module-link:hover {
+            text-decoration: underline;
+        }
+
+        /* Right Side: Interactive Progress Tracker & Roadmap */
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        .progress-box {
+            background-color: var(--color-card-bg);
+            border: 1px solid var(--color-border-light);
+            border-radius: var(--border-radius);
+            padding: 2rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+        }
+
+        .progress-title {
+            font-size: 1.15rem;
+            font-weight: 800;
+            color: var(--color-brand-secondary);
+            margin-bottom: 1rem;
+            border-bottom: 2px solid #f1f5f9;
+            padding-bottom: 0.5rem;
+        }
+
+        .progress-percent-bar {
+            background-color: #e2e8f0;
+            border-radius: 9999px;
+            height: 10px;
+            margin-bottom: 1.5rem;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-percent-fill {
+            background-color: var(--color-accent-green);
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .progress-stats {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--color-text-secondary);
+            margin-bottom: 1.5rem;
+        }
+
+        .checklist {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 0.85rem;
+        }
+
+        .checklist-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            font-size: 0.9rem;
+            color: var(--color-text-secondary);
+            cursor: pointer;
+        }
+
+        .checklist-item input[type="checkbox"] {
+            margin-top: 0.25rem;
+            width: 1.1rem;
+            height: 1.1rem;
+            cursor: pointer;
+        }
+
+        .checklist-item span.completed {
+            text-decoration: line-through;
+            color: var(--color-text-muted);
+        }
+
+        /* 30-60-90 Roadmap Sidebar */
+        .roadmap-box {
+            background-color: var(--color-card-bg);
+            border: 1px solid var(--color-border-light);
+            border-radius: var(--border-radius);
+            padding: 2rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+        }
+
+        .roadmap-title {
+            font-size: 1.15rem;
+            font-weight: 800;
+            color: var(--color-brand-secondary);
+            margin-bottom: 1.25rem;
+            border-bottom: 2px solid #f1f5f9;
+            padding-bottom: 0.5rem;
+        }
+
+        .roadmap-steps {
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+            position: relative;
+            padding-left: 1.5rem;
+            border-left: 2px dashed #cbd5e1;
+        }
+
+        .roadmap-step {
+            position: relative;
+        }
+
+        .roadmap-step::before {
+            content: '';
+            position: absolute;
+            left: calc(-1.5rem - 6px);
+            top: 4px;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: var(--color-brand-primary);
+            border: 2px solid #ffffff;
+            box-shadow: 0 0 0 3px rgba(255, 90, 54, 0.2);
+        }
+
+        .step-phase {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--color-brand-primary);
+            text-transform: uppercase;
+            margin-bottom: 0.15rem;
+        }
+
+        .step-name {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--color-brand-secondary);
+            margin-bottom: 0.25rem;
+        }
+
+        .step-desc {
+            font-size: 0.85rem;
+            color: var(--color-text-secondary);
+            line-height: 1.4;
+        }
+
+        /* Certifications Quick View */
+        .certs-box {
+            background-color: var(--color-card-bg);
+            border: 1px solid var(--color-border-light);
+            border-radius: var(--border-radius);
+            padding: 2rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+        }
+
+        .certs-title {
+            font-size: 1.15rem;
+            font-weight: 800;
+            color: var(--color-brand-secondary);
+            margin-bottom: 1rem;
+            border-bottom: 2px solid #f1f5f9;
+            padding-bottom: 0.5rem;
+        }
+
+        .cert-row {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+            font-size: 0.85rem;
+        }
+
+        .cert-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .cert-badge {
+            font-size: 0.65rem;
+            font-weight: 800;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+
+        .cert-badge.step1 {
+            background-color: #e0f2fe;
+            color: #0369a1;
+        }
+
+        .cert-badge.step2 {
+            background-color: #f0fdf4;
+            color: #166534;
+        }
+
+        .cert-badge.step3 {
+            background-color: #fef9c3;
+            color: #854d0e;
+        }
+
+        .cert-name {
+            font-weight: 600;
+            color: var(--color-text-secondary);
+        }
+    </style>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+
+    <div class="container">
+
+        <!-- Navigation Bar -->
+        <nav class="navbar">
+            <div class="brand">Databricks <span>FDE</span> Mastery</div>
+            <ul class="nav-links">
+                <li><a href="index.html" class="active">Home</a></li>
+                <li><a href="architecture_and_pricing.html">Architecture</a></li>
+                <li><a href="spark_internals.html">Spark Internals</a></li>
+                <li><a href="performance_tuning.html">Performance</a></li>
+                <li><a href="unity_catalog_and_security.html">Governance</a></li>
+                <li><a href="delta_live_tables.html">DLT</a></li>
+                <li><a href="streaming.html">Streaming</a></li>
+                <li><a href="iac_and_ci_cd.html">IaC & CI/CD</a></li>
+                <li><a href="mlflow.html">MLflow</a></li>
+                <li><a href="cost_governance.html">Cost/FinOps</a></li>
+                <li><a href="glossary.html">Glossary</a></li>
+                <li><a href="interview_question_bank.html">Q&A Bank</a></li>
+                <li><a href="mosaic_ai.html">Mosaic AI</a></li>
+            </ul>
+        </nav>
+
+        <!-- Hero Card -->
+        <header class="hero">
+            <div class="eyebrow">The Complete Self-Contained FDE Curriculum</div>
+            <h1>Databricks Forward Deployment Engineer — Mastery Hub</h1>
+            <p>A single, standalone study system. Every chapter teaches from first principles with fully runnable code,
+                expected outputs, common errors and fixes, architecture decision frameworks, pricing math, hands-on
+                labs, and interview Q&A with model answers. You should not need any external material to prepare.</p>
+            <div class="reading-meta">
+                <span>📚 12 chapters</span>
+                <span>⏱️ ~45–55 hours of study</span>
+                <span>🧪 Hands-on labs in every chapter</span>
+                <span>🎯 110+ interview questions</span>
+            </div>
+            <div class="pills">
+                <span class="pill pill-primary">Spark & Photon Internals</span>
+                <span class="pill">Unity Catalog</span>
+                <span class="pill">Delta Live Tables</span>
+                <span class="pill">Structured Streaming</span>
+                <span class="pill">Terraform & DABs</span>
+                <span class="pill">MLflow</span>
+                <span class="pill">FinOps</span>
+                <span class="pill">Mosaic AI & RAG</span>
+            </div>
+        </header>
+
+        <div class="box gotcha-box">
+            <h4>💡 How to use this hub (read this first)</h4>
+            <p>Each chapter reads top-to-bottom like a textbook chapter. Green <strong>FREE</strong> badges mark content
+                you can practice on Databricks Community/Free Edition; red <strong>PAID</strong> badges mark content
+                requiring a cloud-linked trial/enterprise workspace. Every chapter ends with a lab and an interview Q&A
+                accordion. Your progress checklist on the right is saved automatically in your browser.</p>
+        </div>
+
+        <!-- Curriculum -->
+        <div class="grid-layout">
+            <main class="main-content">
+                <section class="section-card">
+                    <h2>The 12-Chapter Curriculum</h2>
+                    <p>Chapters are ordered as a learning path — fundamentals first, then platform engineering, then
+                        specialization, then interview consolidation.</p>
+                    <div class="modular-grid">
+                        <div class="module-card">
+                            <div class="module-eyebrow">Ch 1 · Foundations</div>
+                            <div class="module-title">Architecture & Pricing</div>
+                            <p class="module-desc">Control vs Data Plane, compute types, cluster policies, and the
+                                complete DBU + cloud VM cost math with worked examples.</p>
+                            <div class="module-skills"><span class="skill-tag">Planes</span><span
+                                    class="skill-tag">Serverless</span><span class="skill-tag">DBU Math</span></div><a
+                                class="module-link" href="architecture_and_pricing.html">Open chapter ➔</a>
+                        </div>
+                        <div class="module-card">
+                            <div class="module-eyebrow">Ch 2 · Engine</div>
+                            <div class="module-title">Spark Internals</div>
+                            <p class="module-desc">Catalyst optimizer, Adaptive Query Execution, jobs/stages/tasks,
+                                partitions, the memory model, and how shuffles really work.</p>
+                            <div class="module-skills"><span class="skill-tag">Catalyst</span><span
+                                    class="skill-tag">AQE</span><span class="skill-tag">DAG</span></div><a
+                                class="module-link" href="spark_internals.html">Open chapter ➔</a>
+                        </div>
+                        <div class="module-card">
+                            <div class="module-eyebrow">Ch 3 · Engine</div>
+                            <div class="module-title">Performance Tuning</div>
+                            <p class="module-desc">Diagnose skew, spill, and shuffle from the Spark UI; broadcast joins,
+                                salting, Liquid Clustering, OPTIMIZE/VACUUM, Photon.</p>
+                            <div class="module-skills"><span class="skill-tag">Skew</span><span
+                                    class="skill-tag">Spill</span><span class="skill-tag">Photon</span></div><a
+                                class="module-link" href="performance_tuning.html">Open chapter ➔</a>
+                        </div>
+                        <div class="module-card">
+                            <div class="module-eyebrow">Ch 4 · Platform</div>
+                            <div class="module-title">Unity Catalog & Security</div>
+                            <p class="module-desc">3-level namespace, storage credentials, external locations, dynamic
+                                masking, row filters, lineage, Delta Sharing, audit logs.</p>
+                            <div class="module-skills"><span class="skill-tag">Metastore</span><span
+                                    class="skill-tag">Masking</span><span class="skill-tag">Lineage</span></div><a
+                                class="module-link" href="unity_catalog_and_security.html">Open chapter ➔</a>
+                        </div>
+                        <div class="module-card">
+                            <div class="module-eyebrow">Ch 5 · Pipelines</div>
+                            <div class="module-title">Delta Live Tables</div>
+                            <p class="module-desc">Declarative pipelines, streaming tables, materialized views,
+                                expectations, SCD Type 1/2 with APPLY CHANGES.</p>
+                            <div class="module-skills"><span class="skill-tag">DLT</span><span
+                                    class="skill-tag">Expectations</span><span class="skill-tag">SCD</span></div><a
+                                class="module-link" href="delta_live_tables.html">Open chapter ➔</a>
+                        </div>
+                        <div class="module-card">
+                            <div class="module-eyebrow">Ch 6 · Pipelines</div>
+                            <div class="module-title">Structured Streaming</div>
+                            <p class="module-desc">Micro-batch model, checkpoints, watermarks, output modes, Auto
+                                Loader, and exactly-once with idempotent sinks.</p>
+                            <div class="module-skills"><span class="skill-tag">Checkpoints</span><span
+                                    class="skill-tag">Watermarks</span><span class="skill-tag">Auto Loader</span></div>
+                            <a class="module-link" href="streaming.html">Open chapter ➔</a>
+                        </div>
+                        <div class="module-card">
+                            <div class="module-eyebrow">Ch 7 · Platform</div>
+                            <div class="module-title">IaC & CI/CD</div>
+                            <p class="module-desc">A complete Terraform project, DABs bundle structure, GitHub Actions
+                                pipeline, and unit testing Spark code.</p>
+                            <div class="module-skills"><span class="skill-tag">Terraform</span><span
+                                    class="skill-tag">DABs</span><span class="skill-tag">pytest</span></div><a
+                                class="module-link" href="iac_and_ci_cd.html">Open chapter ➔</a>
+                        </div>
+                        <div class="module-card">
+                            <div class="module-eyebrow">Ch 8 · Specialize</div>
+                            <div class="module-title">MLflow & ML Platform</div>
+                            <p class="module-desc">Tracking, Model Registry, model serving, and the Feature Store — what
+                                an FDE must know to stand up ML workloads.</p>
+                            <div class="module-skills"><span class="skill-tag">Tracking</span><span
+                                    class="skill-tag">Registry</span><span class="skill-tag">Serving</span></div><a
+                                class="module-link" href="mlflow.html">Open chapter ➔</a>
+                        </div>
+                        <div class="module-card">
+                            <div class="module-eyebrow">Ch 9 · Money</div>
+                            <div class="module-title">Cost Governance / FinOps</div>
+                            <p class="module-desc">Budgets, tagging strategy, system.billing.usage queries, chargeback,
+                                and the levers that cut a customer's bill.</p>
+                            <div class="module-skills"><span class="skill-tag">Tags</span><span
+                                    class="skill-tag">system.billing</span><span class="skill-tag">Chargeback</span>
+                            </div><a class="module-link" href="cost_governance.html">Open chapter ➔</a>
+                        </div>
+                        <div class="module-card">
+                            <div class="module-eyebrow">Ch 10 · Reference</div>
+                            <div class="module-title">Glossary</div>
+                            <p class="module-desc">Every term used in the hub defined in one place — skim before an
+                                interview to lock in vocabulary.</p>
+                            <div class="module-skills"><span class="skill-tag">Terms</span><span
+                                    class="skill-tag">Acronyms</span></div><a class="module-link"
+                                href="glossary.html">Open chapter ➔</a>
+                        </div>
+                        <div class="module-card">
+                            <div class="module-eyebrow">Ch 11 · Interview</div>
+                            <div class="module-title">Interview Question Bank</div>
+                            <p class="module-desc">100+ questions across architecture, Spark, governance, cost, and
+                                behavioral, each with a model answer and "what they're testing".</p>
+                            <div class="module-skills"><span class="skill-tag">100+ Q&A</span><span
+                                    class="skill-tag">Behavioral</span></div><a class="module-link"
+                                href="interview_question_bank.html">Open chapter ➔</a>
+                        </div>
+                        <div class="module-card">
+                            <div class="module-eyebrow">Ch 12 · Intelligence</div>
+                            <div class="module-title">Mosaic AI Platform</div>
+                            <p class="module-desc">Foundation Model APIs, Vector Search & RAG, AI/BI Genie, Lakehouse
+                                Monitoring, Databricks Apps, Predictive Optimization, and Lakehouse Federation.</p>
+                            <div class="module-skills"><span class="skill-tag">Vector Search</span><span
+                                    class="skill-tag">Genie</span><span class="skill-tag">RAG</span></div><a
+                                class="module-link" href="mosaic_ai.html">Open chapter ➔</a>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="section-card">
+                    <h2>The FDE Paradigm Shift — What You Are Actually Hired To Do</h2>
+                    <p>A Forward Deployment Engineer is a hybrid of <strong>software engineer</strong>,
+                        <strong>platform/cloud architect</strong>, and <strong>solutions consultant</strong>. You are
+                        dropped into a customer's environment and expected to design production platforms, fix expensive
+                        broken pipelines, pass security audits, and defend architecture and cost decisions in front of
+                        the customer's engineers and executives.
+                    </p>
+                    <div class="table-scroll">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th style="width:22%">Domain</th>
+                                    <th>Notebook Developer</th>
+                                    <th>Forward Deployment Engineer</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>Deployment</strong></td>
+                                    <td>Clicks "Create Cluster", runs cells ad-hoc.</td>
+                                    <td>Declares workspaces, clusters, catalogs as code with Terraform + DABs.</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Code</strong></td>
+                                    <td>Monolithic notebook, hardcoded paths.</td>
+                                    <td>Tested Python wheels, modular DLT, CI/CD gates, unit tests.</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Performance</strong></td>
+                                    <td>Adds more nodes when slow.</td>
+                                    <td>Reads Spark UI, fixes skew/spill/shuffle, enables Photon.</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Security</strong></td>
+                                    <td>Asks for admin, hardcodes keys.</td>
+                                    <td>Unity Catalog RBAC, dynamic masking, Private Link.</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Money</strong></td>
+                                    <td>Unaware of DBU cost.</td>
+                                    <td>Models DBU + VM cost, tags workloads, builds FinOps dashboards.</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>AI</strong></td>
+                                    <td>Pastes ChatGPT output into notebooks.</td>
+                                    <td>Wires Vector Search + FMAPI into governed RAG apps; deploys via Databricks Apps.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            </main>
+
+            <aside class="sidebar-panel">
+                <div class="side-card">
+                    <h3>My Preparation Tracker</h3>
+                    <div class="progress-percent-bar">
+                        <div class="progress-percent-fill" id="progressBar"></div>
+                    </div>
+                    <div class="progress-stats"><span id="completedCount">0 / 12</span><span id="percentText">0%</span>
+                    </div>
+                    <ul class="checklist">
+                        <li class="checklist-item"><input type="checkbox" id="c1" onchange="updateProgress()"><span
+                                id="t-c1">Ch1 Architecture & Pricing</span></li>
+                        <li class="checklist-item"><input type="checkbox" id="c2" onchange="updateProgress()"><span
+                                id="t-c2">Ch2 Spark Internals</span></li>
+                        <li class="checklist-item"><input type="checkbox" id="c3" onchange="updateProgress()"><span
+                                id="t-c3">Ch3 Performance Tuning</span></li>
+                        <li class="checklist-item"><input type="checkbox" id="c4" onchange="updateProgress()"><span
+                                id="t-c4">Ch4 Unity Catalog</span></li>
+                        <li class="checklist-item"><input type="checkbox" id="c5" onchange="updateProgress()"><span
+                                id="t-c5">Ch5 Delta Live Tables</span></li>
+                        <li class="checklist-item"><input type="checkbox" id="c6" onchange="updateProgress()"><span
+                                id="t-c6">Ch6 Structured Streaming</span></li>
+                        <li class="checklist-item"><input type="checkbox" id="c7" onchange="updateProgress()"><span
+                                id="t-c7">Ch7 IaC & CI/CD</span></li>
+                        <li class="checklist-item"><input type="checkbox" id="c8" onchange="updateProgress()"><span
+                                id="t-c8">Ch8 MLflow</span></li>
+                        <li class="checklist-item"><input type="checkbox" id="c9" onchange="updateProgress()"><span
+                                id="t-c9">Ch9 Cost / FinOps</span></li>
+                        <li class="checklist-item"><input type="checkbox" id="c10" onchange="updateProgress()"><span
+                                id="t-c10">Ch10 Glossary review</span></li>
+                        <li class="checklist-item"><input type="checkbox" id="c11" onchange="updateProgress()"><span
+                                id="t-c11">Ch11 Question Bank drill</span></li>
+                        <li class="checklist-item"><input type="checkbox" id="c12" onchange="updateProgress()"><span
+                                id="t-c12">Ch12 Mosaic AI & Intelligence</span></li>
+                    </ul>
+                </div>
+
+                <div class="side-card">
+                    <h3>Suggested Study Roadmap</h3>
+                    <div class="roadmap-steps">
+                        <div class="roadmap-step">
+                            <div class="step-phase">Week 1</div>
+                            <div class="step-name">Engine Foundations</div>
+                            <div class="step-desc">Chapters 1–3. Planes, cost, and how Spark executes.</div>
+                        </div>
+                        <div class="roadmap-step">
+                            <div class="step-phase">Week 2</div>
+                            <div class="step-name">Platform & Governance</div>
+                            <div class="step-desc">Chapters 4, 7, 9. Unity Catalog, Terraform/DABs, FinOps.</div>
+                        </div>
+                        <div class="roadmap-step">
+                            <div class="step-phase">Week 3</div>
+                            <div class="step-name">Pipelines & ML</div>
+                            <div class="step-desc">Chapters 5, 6, 8. DLT, streaming, MLflow.</div>
+                        </div>
+                        <div class="roadmap-step">
+                            <div class="step-phase">Week 4</div>
+                            <div class="step-name">AI & Interview</div>
+                            <div class="step-desc">Chapter 12. Mosaic AI, Vector Search, Genie, Lakehouse Monitoring.
+                            </div>
+                        </div>
+                        <div class="roadmap-step">
+                            <div class="step-phase">Week 5</div>
+                            <div class="step-name">Consolidation</div>
+                            <div class="step-desc">Chapters 10–11. Glossary + drill the question bank out loud.</div>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+        </div>
+
+    </div>
+
+    <script>
+        const items = ['c1', 'c2', 'c3', 'c4', 'c5', 'c6', 'c7', 'c8', 'c9', 'c10', 'c11', 'c12'];
+        window.addEventListener('DOMContentLoaded', () => {
+            items.forEach(id => {
+                const checked = localStorage.getItem('fde_' + id) === 'true';
+                const el = document.getElementById(id);
+                if (el) { el.checked = checked; style(id, checked); }
+            });
+            updateProgress(false);
+        });
+        function style(id, checked) {
+            const t = document.getElementById('t-' + id);
+            if (t) t.classList.toggle('completed', checked);
+        }
+        function updateProgress(save = true) {
+            let done = 0;
+            items.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) { if (el.checked) done++; if (save) localStorage.setItem('fde_' + id, el.checked); style(id, el.checked); }
+            });
+            const pct = Math.round((done / items.length) * 100);
+            document.getElementById('progressBar').style.width = pct + '%';
+            document.getElementById('completedCount').textContent = `${done} / ${items.length}`;
+            document.getElementById('percentText').textContent = `${pct}%`;
+        }
+    </script>
+
+</body>
+
+</html>

@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FDE Prep: Unity Catalog & Enterprise Security</title>
+    <link rel="icon" type="image/svg+xml"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect x='10' y='10' width='80' height='80' rx='15' fill='%23ff5a36'/><path d='M30 50 L45 65 L70 35' stroke='white' stroke-width='8' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>">
+    <style>
+        :root {
+            --color-bg: #f8fafc;
+            --color-card-bg: #ffffff;
+            --color-text-primary: #0f172a;
+            --color-text-secondary: #334155;
+            --color-text-muted: #64748b;
+            --color-brand-primary: #ff5a36;
+            /* Databricks Orange */
+            --color-brand-secondary: #0f172a;
+            /* Dark Slate */
+            --color-accent-blue: #2563eb;
+            --color-accent-teal: #0d9488;
+            --color-accent-green: #10b981;
+            --color-accent-orange: #ea580c;
+            --color-border: #cbd5e1;
+            --color-border-light: #e2e8f0;
+            --border-radius: 16px;
+            --border-radius-sm: 8px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+            background-color: var(--color-bg);
+            color: var(--color-text-primary);
+            line-height: 1.65;
+            font-size: 16px;
+        }
+
+        .container {
+            width: 95%;
+            max-width: 1500px;
+            margin: 0 auto;
+            padding: 2.5rem 0;
+        }
+
+        /* Top Navigation Bar */
+        .navbar {
+            background-color: var(--color-brand-secondary);
+            color: #ffffff;
+            padding: 1.25rem 2rem;
+            border-radius: var(--border-radius);
+            margin-bottom: 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 15px rgba(15, 23, 42, 0.15);
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .navbar .brand {
+            font-size: 1.35rem;
+            font-weight: 800;
+            letter-spacing: -0.025em;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .navbar .brand span {
+            color: var(--color-brand-primary);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 1.25rem;
+            list-style: none;
+            flex-wrap: wrap;
+        }
+
+        .nav-links a {
+            color: #cbd5e1;
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 600;
+            padding: 0.5rem 0.85rem;
+            border-radius: var(--border-radius-sm);
+            transition: all 0.2s ease;
+        }
+
+        .nav-links a:hover,
+        .nav-links a.active {
+            color: #ffffff;
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        /* Content Header */
+        .content-header {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            color: #ffffff;
+            padding: 2.5rem;
+            border-radius: var(--border-radius);
+            margin-bottom: 2.5rem;
+            box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.1);
+        }
+
+        .content-header h1 {
+            font-size: 2rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+        }
+
+        .content-header p {
+            color: #94a3b8;
+            font-size: 1.05rem;
+        }
+
+        /* Badges */
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 1rem;
+        }
+
+        .badge-paid {
+            background-color: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fca5a5;
+        }
+
+        .badge-free {
+            background-color: #dcfce7;
+            color: #15803d;
+            border: 1px solid #86efac;
+        }
+
+        /* Standard Content Sections */
+        .grid-layout {
+            display: grid;
+            grid-template-columns: 2.2fr 1fr;
+            gap: 2.5rem;
+        }
+
+        @media (max-width: 1200px) {
+            .grid-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            gap: 2.5rem;
+        }
+
+        .section-card {
+            background-color: #ffffff;
+            border-radius: var(--border-radius);
+            border: 1px solid var(--color-border-light);
+            padding: 2.5rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+        }
+
+        .section-card h2 {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--color-brand-secondary);
+            margin-bottom: 1.25rem;
+            border-bottom: 2px solid #f1f5f9;
+            padding-bottom: 0.5rem;
+        }
+
+        .section-card h3 {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: var(--color-text-primary);
+            margin: 1.5rem 0 0.75rem;
+        }
+
+        .section-card p {
+            font-size: 1rem;
+            color: var(--color-text-secondary);
+            margin-bottom: 1.25rem;
+            line-height: 1.7;
+        }
+
+        .section-card ul {
+            list-style: none;
+            margin-bottom: 1.25rem;
+        }
+
+        .section-card ul li {
+            position: relative;
+            padding-left: 1.5rem;
+            margin-bottom: 0.75rem;
+            font-size: 0.95rem;
+            color: var(--color-text-secondary);
+        }
+
+        .section-card ul li::before {
+            content: "•";
+            color: var(--color-brand-primary);
+            font-weight: bold;
+            font-size: 1.2rem;
+            position: absolute;
+            left: 0;
+            top: -0.1rem;
+        }
+
+        /* Block Callouts */
+        .strategy-box {
+            background-color: #ecfdf5;
+            border-left: 4px solid var(--color-accent-green);
+            padding: 1.5rem;
+            border-radius: 0 var(--border-radius-sm) var(--border-radius-sm) 0;
+            margin-bottom: 1.5rem;
+        }
+
+        .strategy-box h4 {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #065f46;
+            margin-bottom: 0.5rem;
+        }
+
+        .strategy-box p {
+            font-size: 0.925rem;
+            color: #065f46;
+            margin-bottom: 0;
+        }
+
+        .decision-box {
+            background-color: #f0f9ff;
+            border-left: 4px solid var(--color-accent-blue);
+            padding: 1.5rem;
+            border-radius: 0 var(--border-radius-sm) var(--border-radius-sm) 0;
+            margin-bottom: 1.5rem;
+        }
+
+        .decision-box h4 {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #0c4a6e;
+            margin-bottom: 0.5rem;
+        }
+
+        .decision-box p {
+            font-size: 0.925rem;
+            color: #0c4a6e;
+            margin-bottom: 0;
+        }
+
+        .pricing-box {
+            background-color: #fff7ed;
+            border-left: 4px solid var(--color-accent-orange);
+            padding: 1.5rem;
+            border-radius: 0 var(--border-radius-sm) var(--border-radius-sm) 0;
+            margin-bottom: 1.5rem;
+        }
+
+        .pricing-box h4 {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #854d0e;
+            margin-bottom: 0.5rem;
+        }
+
+        .pricing-box p {
+            font-size: 0.925rem;
+            color: #7c2d12;
+            margin-bottom: 0;
+        }
+
+        /* Code Block */
+        pre {
+            background-color: var(--color-brand-secondary);
+            color: #e2e8f0;
+            padding: 1.25rem;
+            border-radius: var(--border-radius-sm);
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.875rem;
+            overflow-x: auto;
+            margin-bottom: 1.25rem;
+            border: 1px solid #334155;
+        }
+
+        /* Sidebar Cards */
+        .sidebar-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+            position: sticky;
+            top: 2rem;
+        }
+
+        .side-card {
+            background-color: #ffffff;
+            border-radius: var(--border-radius);
+            border: 1px solid var(--color-border-light);
+            padding: 2rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+        }
+
+        .side-card h3 {
+            font-size: 1.15rem;
+            font-weight: 800;
+            color: var(--color-brand-secondary);
+            margin-bottom: 1rem;
+            border-bottom: 2px solid #f1f5f9;
+            padding-bottom: 0.5rem;
+        }
+
+        .checklist {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .checklist-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+            color: var(--color-text-secondary);
+        }
+
+        .checklist-item::before {
+            content: "⬜";
+            font-size: 0.8rem;
+            margin-top: 0.15rem;
+        }
+
+        .checklist-item.checked::before {
+            content: "✅";
+        }
+
+        /* Comparison Table */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+            font-size: 0.9rem;
+            border: 1px solid var(--color-border-light);
+            border-radius: var(--border-radius-sm);
+            overflow: hidden;
+        }
+
+        th {
+            background-color: #f1f5f9;
+            font-weight: 700;
+            color: var(--color-brand-secondary);
+            text-align: left;
+            padding: 0.85rem 1.25rem;
+            border-bottom: 2px solid var(--color-border);
+        }
+
+        td {
+            padding: 0.85rem 1.25rem;
+            border-bottom: 1px solid var(--color-border-light);
+            color: var(--color-text-secondary);
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+    </style>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+
+    <div class="container">
+
+        <!-- Navigation Bar -->
+        <nav class="navbar">
+            <div class="brand">Databricks <span>FDE</span> Mastery</div>
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="architecture_and_pricing.html">Architecture</a></li>
+                <li><a href="spark_internals.html">Spark Internals</a></li>
+                <li><a href="performance_tuning.html">Performance</a></li>
+                <li><a href="unity_catalog_and_security.html" class="active">Governance</a></li>
+                <li><a href="delta_live_tables.html">DLT</a></li>
+                <li><a href="streaming.html">Streaming</a></li>
+                <li><a href="iac_and_ci_cd.html">IaC & CI/CD</a></li>
+                <li><a href="mlflow.html">MLflow</a></li>
+                <li><a href="cost_governance.html">Cost/FinOps</a></li>
+                <li><a href="glossary.html">Glossary</a></li>
+                <li><a href="interview_question_bank.html">Q&A Bank</a></li>
+                <li><a href="mosaic_ai.html">Mosaic AI</a></li>
+            </ul>
+        </nav>
+
+        <!-- Content Header -->
+        <header class="content-header">
+            <h1>Unity Catalog & Enterprise Security</h1>
+            <p>Implement bulletproof data governance models using 3-tier namespaces, dynamic PII masking, secure storage
+                credentials, and audit tables.</p>
+        </header>
+
+        <!-- Main Layout Split -->
+        <div class="grid-layout">
+
+            <!-- Main Column -->
+            <main class="main-content">
+
+                <!-- Section 1: Unity Catalog Hierarchy -->
+                <section class="section-card">
+                    <span class="badge badge-paid">Paid Cloud Subscription Required</span>
+                    <h2>1. Unity Catalog 3-Tier Governance Hierarchy</h2>
+                    <p>
+                        **Unity Catalog (UC)** is Databricks' flagship data governance model. It replaces legacy DBFS
+                        mount structures with a secure, centralized metadata directory. It provides a standard, uniform
+                        <strong>3-Tier Namespace</strong> hierarchy to reference tables across all cloud clouds:
+                    </p>
+
+                    <pre>
+ 🏢 Metastore (Central core, maps to one region)
+  └── 📦 Catalog (The broad department scope, e.g., "finance")
+       └── 📂 Schema (The functional dataset, e.g., "audits")
+            └── 📄 Table / View / Volume (The actual data resource)
+                    </pre>
+
+                    <h3>Security Object Privileges</h3>
+                    <p>
+                        Permissions cascade downwards through the hierarchy using declarative SQL or Python commands. If
+                        you grant read privileges on a catalog, the user automatically inherits read privileges on all
+                        underlying schemas and tables.
+                    </p>
+
+                    <div class="decision-box">
+                        <h4>💡 Architecture Decision Pattern</h4>
+                        <p>
+                            Always configure one <strong>Metastore per geographical cloud region</strong>. Map multiple
+                            workspaces (e.g., <code>workspace_dev</code> and <code>workspace_prod</code>) to the *same*
+                            metastore to enable seamless cross-workspace queries and centralized access reporting.
+                        </p>
+                    </div>
+                </section>
+
+                <!-- Section 2: Storage Credentials & External Locations -->
+                <section class="section-card">
+                    <span class="badge badge-paid">Paid Cloud Subscription Required</span>
+                    <h2>2. Securing the Underlying Storage</h2>
+                    <p>
+                        In a production-scale Lakehouse, developers should never access cloud storage (AWS S3, Azure
+                        Data Lake Gen2) using raw API keys or connection strings hardcoded in notebook cells. FDEs
+                        secure the physical storage layer using UC's security abstraction:
+                    </p>
+
+                    <h3>The Storage Delegation Pattern</h3>
+                    <ul>
+                        <li><strong>Storage Credential:</strong> Links an AWS IAM Role or Azure Managed Identity
+                            directly to the Metastore. No human user ever sees or manages these cloud keys.</li>
+                        <li><strong>External Location:</strong> A physical storage path (e.g.,
+                            <code>s3://my-enterprise-bucket/finance_data/</code>) authorized using a Storage Credential.
+                        </li>
+                        <li><strong>External Tables:</strong> Tables declared inside Unity Catalog that reference files
+                            stored securely within an External Location.</li>
+                    </ul>
+
+                    <div class="strategy-box">
+                        <h4>FDE Value-Add: Eliminating the "DBFS Mount" Vulnerability</h4>
+                        <p>
+                            Legacy DBFS mounts make file keys globally accessible to anyone on the cluster. By migrating
+                            clients to **Unity Catalog External Locations**, access is strictly checked by the Metastore
+                            in real-time, completely passing security compliance audits (GDPR, SOC2).
+                        </p>
+                    </div>
+                </section>
+
+                <!-- Section 3: Fine-Grained Auditing & Security -->
+                <section class="section-card">
+                    <span class="badge badge-paid">Paid Cloud Subscription Required</span>
+                    <h2>3. Dynamic PII Masking & Row Filtering</h2>
+                    <p>
+                        FDEs often implement fine-grained access control policies where sensitive PII data (social
+                        security numbers, payroll budgets) is masked dynamically depending on who runs the query.
+                    </p>
+
+                    <h3>Dynamic Column Masking</h3>
+                    <p>
+                        A custom SQL user function determines if the current querying user is an authorized member of a
+                        privilege group (e.g., <code>hr_admin</code>). If not, they see a hashed or masked string
+                        instead of the raw data.
+                    </p>
+
+                    <pre>
+-- 1. Create the masking function
+CREATE OR REPLACE FUNCTION pii_ssn_mask(ssn STRING)
+  RETURN CASE WHEN IS_MEMBER('hr_admin') THEN ssn ELSE '###-XX-XXXX' END;
+
+-- 2. Apply the mask to a column
+ALTER TABLE raw_data.hr.employees ALTER COLUMN ssn SET MASK pii_ssn_mask;
+                    </pre>
+
+                    <h3>Dynamic Row Filtering</h3>
+                    <p>
+                        Restricts which rows are returned based on the user's regional profile, ensuring regional sales
+                        teams can only query datasets relevant to their specific market.
+                    </p>
+
+                    <pre>
+-- Filter rows so users only see data matching their regional role
+CREATE OR REPLACE FUNCTION regional_sales_filter(region STRING)
+  RETURN IS_MEMBER('global_admin') OR IS_MEMBER(CONCAT('sales_', region));
+
+-- Apply the filter to the target table
+ALTER TABLE main.sales.orders SET ROW FILTER regional_sales_filter ON (order_region);
+                    </pre>
+                </section>
+
+                <!-- Section 4: Delta Sharing & Auditing -->
+                <section class="section-card">
+                    <span class="badge badge-paid">Paid Cloud Subscription Required</span>
+                    <h2>4. Delta Sharing & Access Auditing</h2>
+                    <p>
+                        Enterprise clients need to securely share large data tables with external partners without
+                        spending money on expensive ETL replication pipelines.
+                    </p>
+
+                    <h3>Delta Sharing Protocol</h3>
+                    <p>
+                        An open protocol developed by Databricks that allows real-time secure sharing of massive
+                        datasets.
+                        <br>• <strong>No Data Replication:</strong> The recipient queries data directly from your
+                        storage.
+                        <br>• <strong>Open Standard:</strong> Recipients can query shared tables using standard PowerBI,
+                        pandas, or external Spark without even owning a Databricks subscription.
+                    </p>
+
+                    <h3>System Access Auditing</h3>
+                    <p>
+                        All user actions, cluster creations, and SQL query records are automatically cataloged in UC's
+                        system schemas. FDEs query these logs directly to monitor access compliance:
+                    </p>
+                    <pre>
+-- Query the system table to audit sensitive table queries
+SELECT user_identity.email, action_name, request_metadata.table_name, timestamp
+FROM system.access.audit
+WHERE request_metadata.table_name = 'raw_data.hr.employees'
+ORDER BY timestamp DESC;
+                    </pre>
+                </section>
+
+                <!-- Section 5: Hands-on Exercise -->
+                <section class="section-card">
+                    <span class="badge badge-paid">Paid Cloud Subscription Required</span>
+                    <h2>5. Lab: Implementing Dynamic RLS and Column Masking</h2>
+
+                    <h3>Objective</h3>
+                    <p>Build a secure sales dashboard table where social security numbers are masked, and regional reps
+                        are dynamically restricted to their sales markets.</p>
+
+                    <h3>Steps to Complete</h3>
+                    <ul>
+                        <li><strong>Step 1:</strong> Log into your Premium Databricks workspace as a Workspace Admin.
+                        </li>
+                        <li><strong>Step 2:</strong> Open SQL Editor and create two test user groups:
+                            <code>sales_us</code> and <code>sales_eu</code>.
+                        </li>
+                        <li><strong>Step 3:</strong> Create a dummy table with columns: <code>customer_id</code>,
+                            <code>ssn</code>, <code>region</code>, and <code>revenue</code>.
+                        </li>
+                        <li><strong>Step 4:</strong> Write and apply a dynamic column masking function to the
+                            <code>ssn</code> column.
+                        </li>
+                        <li><strong>Step 5:</strong> Write and apply a dynamic row-level filter function utilizing the
+                            <code>region</code> column.
+                        </li>
+                        <li><strong>Step 6:</strong> Query the table using different user profiles to verify the data is
+                            dynamically filtered.</li>
+                    </ul>
+                </section>
+
+                <section class="section-card">
+                    <h2>Interview Questions & Model Answers</h2>
+                    <details class="qa">
+                        <summary><span class="q-text">Explain the Unity Catalog object hierarchy.</span></summary>
+                        <div class="qa-body">
+                            <div class="tell"><strong>Testing:</strong> the core governance model.</div>A regional
+                            metastore contains catalogs, which contain schemas, which contain
+                            tables/views/volumes/models — the 3-level namespace <code>catalog.schema.object</code>.
+                            Privileges cascade down, so granting on a catalog inherits to its schemas and tables. One
+                            metastore per region, with multiple workspaces attached for centralized, cross-workspace
+                            governance.
+                        </div>
+                    </details>
+                    <details class="qa">
+                        <summary><span class="q-text">How do storage credentials and external locations remove the
+                                "hardcoded key" problem?</span></summary>
+                        <div class="qa-body">
+                            <div class="tell"><strong>Testing:</strong> secure storage delegation.</div>A storage
+                            credential wraps a cloud IAM role/managed identity; an external location authorizes a
+                            specific storage path using that credential. Users are granted on the UC object, never on
+                            raw keys, and access is checked by the metastore at query time — eliminating DBFS mounts and
+                            shared keys that fail audits.
+                        </div>
+                    </details>
+                    <details class="qa">
+                        <summary><span class="q-text">How would you restrict PII so only HR sees SSNs,
+                                dynamically?</span></summary>
+                        <div class="qa-body">
+                            <div class="tell"><strong>Testing:</strong> fine-grained access control.</div>A column mask
+                            function returning the real value only when <code>IS_MEMBER('hr_admin')</code>, else a
+                            masked string, applied via <code>ALTER TABLE ... SET MASK</code>. Combined with a row filter
+                            for regional restriction. The same physical table serves everyone, masked per identity — no
+                            data duplication.
+                        </div>
+                    </details>
+                    <details class="qa">
+                        <summary><span class="q-text">What is Delta Sharing and why is it powerful?</span></summary>
+                        <div class="qa-body">
+                            <div class="tell"><strong>Testing:</strong> data collaboration.</div>An open protocol for
+                            secure, real-time sharing of large datasets without replication — recipients query directly
+                            from the provider's storage, and can even be non-Databricks (pandas, PowerBI, Spark). It
+                            avoids costly ETL copies and keeps a single governed source of truth.
+                        </div>
+                    </details>
+                    <details class="qa">
+                        <summary><span class="q-text">How do you prove who queried a sensitive table?</span></summary>
+                        <div class="qa-body">
+                            <div class="tell"><strong>Testing:</strong> auditability.</div>Query
+                            <code>system.access.audit</code>, which logs user identity, action, object, and timestamp
+                            for every operation. I build a compliance dashboard on it, satisfying SOC2/GDPR
+                            who-accessed-what requirements.
+                        </div>
+                    </details>
+                    <details class="qa">
+                        <summary><span class="q-text">What does UC data lineage give you and why does it matter to an
+                                FDE?</span></summary>
+                        <div class="qa-body">
+                            <div class="tell"><strong>Testing:</strong> operability + trust.</div>Automatic table- and
+                            column-level lineage across queries, notebooks, and pipelines. It's invaluable for impact
+                            analysis ("what breaks if I change this column?"), audits, and debugging — concrete value I
+                            can show a customer immediately.
+                        </div>
+                    </details>
+                </section>
+
+            </main>
+
+            <!-- Sidebar -->
+            <aside class="sidebar-panel">
+
+                <!-- Free vs Paid Warning -->
+                <div class="side-card" style="border-top: 4px solid var(--color-accent-orange);">
+                    <h3>Trial vs. Enterprise Limits</h3>
+                    <p
+                        style="font-size: 0.85rem; color: var(--color-text-secondary); line-height: 1.5; margin-bottom: 1rem;">
+                        <strong>Databricks Community Edition</strong> does not support Unity Catalog, storage
+                        credentials, external locations, row-level filters, column masking, Delta Sharing, or system
+                        table auditing.
+                    </p>
+                    <p style="font-size: 0.85rem; color: var(--color-text-secondary); line-height: 1.5;">
+                        To complete these labs, you must register for a <strong>Premium or Enterprise Databricks
+                            Workspace Trial</strong> connected to an active cloud provider account.
+                    </p>
+                </div>
+
+                <!-- Next Steps Checklist -->
+                <div class="side-card">
+                    <h3>Next Study Steps</h3>
+                    <ul class="checklist">
+                        <li class="checklist-item checked">Study the 3-Tier namespace structure</li>
+                        <li class="checklist-item">Memorize Row Filtering SQL templates</li>
+                        <li class="checklist-item">Understand the Delta Sharing protocol</li>
+                        <li class="checklist-item">Audit queries using system log tables</li>
+                    </ul>
+                </div>
+
+            </aside>
+
+        </div>
+
+        <div class="page-nav">
+            <a href="performance_tuning.html">
+                <div class="dir">◀ Previous</div>
+                <div class="pg-title">Ch 3 · Performance Tuning</div>
+            </a>
+            <a class="next" href="delta_live_tables.html">
+                <div class="dir">Next ▶</div>
+                <div class="pg-title">Ch 5 · Delta Live Tables</div>
+            </a>
+        </div>
+
+    </div>
+
+</body>
+
+</html>

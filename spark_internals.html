@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ch 2 · Spark Internals — Databricks FDE Mastery</title>
+    <link rel="icon" type="image/svg+xml"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect x='10' y='10' width='80' height='80' rx='15' fill='%23ff5a36'/><path d='M30 50 L45 65 L70 35' stroke='white' stroke-width='8' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>">
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <div class="container">
+
+        <nav class="navbar">
+            <div class="brand">Databricks <span>FDE</span> Mastery</div>
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="architecture_and_pricing.html">Architecture</a></li>
+                <li><a href="spark_internals.html" class="active">Spark Internals</a></li>
+                <li><a href="performance_tuning.html">Performance</a></li>
+                <li><a href="unity_catalog_and_security.html">Governance</a></li>
+                <li><a href="delta_live_tables.html">DLT</a></li>
+                <li><a href="streaming.html">Streaming</a></li>
+                <li><a href="iac_and_ci_cd.html">IaC & CI/CD</a></li>
+                <li><a href="mlflow.html">MLflow</a></li>
+                <li><a href="cost_governance.html">Cost/FinOps</a></li>
+                <li><a href="glossary.html">Glossary</a></li>
+                <li><a href="interview_question_bank.html">Q&A Bank</a></li>
+                <li><a href="mosaic_ai.html">Mosaic AI</a></li>
+            </ul>
+        </nav>
+
+        <header class="content-header">
+            <div class="eyebrow">Chapter 2 · The Engine</div>
+            <h1>Spark Internals — How Your Code Actually Runs</h1>
+            <p>You cannot tune what you do not understand. This chapter builds the mental model of the Spark execution
+                engine from first principles: the cluster topology, the logical-to-physical journey through Catalyst,
+                jobs/stages/tasks, partitions, the memory model, shuffle mechanics, and Adaptive Query Execution. Every
+                later performance fix is an application of something here.</p>
+            <div class="reading-meta"><span>⏱️ ~3–4 hours</span><span>🧪 1 lab</span><span>🎯 10 interview
+                    questions</span><span class="badge badge-free" style="margin:0">Mostly FREE-tier friendly</span>
+            </div>
+        </header>
+
+        <div class="grid-layout">
+            <main class="main-content">
+
+                <section class="section-card anchor-offset" id="topology">
+                    <span class="badge badge-free">Practise on Community/Free Edition</span>
+                    <h2>2.1 Cluster Topology: Driver, Executors, Slots</h2>
+                    <p>A Spark application is a <strong>distributed program</strong>. Understanding which machine does
+                        what is the foundation for reading the Spark UI later.</p>
+                    <div class="diagram">┌─────────────────────────── Spark Application ───────────────────────────┐
+                        │ │
+                        │ ┌──────────────┐ schedules tasks ┌──────────────────┐ │
+                        │ │ DRIVER │ ───────────────────────────▶ │ EXECUTOR 1 │ │
+                        │ │ (1 JVM) │ │ cores = 4 slots │ │
+                        │ │ - SparkSession │ memory = 16 GB │ │
+                        │ │ - DAGScheduler │ [task][task] │ │
+                        │ │ - TaskScheduler│ ◀────────────────────────── │ [task][task] │ │
+                        │ │ - keeps RDD lineage results / heartbeats └──────────────────┘ │
+                        │ └──────────────┘ ┌──────────────────┐ │
+                        │ │ EXECUTOR 2 │ │
+                        │ │ cores = 4 slots │ │
+                        │ │ [task][task]... │ │
+                        │ └──────────────────┘ │
+                        └──────────────────────────────────────────────────────────────────────────┘</div>
+                    <ul>
+                        <li><strong>Driver:</strong> the single JVM that runs your <code>main()</code> / notebook cell.
+                            It builds the query plan, splits work into tasks, schedules them, and collects results. If
+                            you call <code>.collect()</code> on a huge DataFrame, all that data flows back into this one
+                            JVM — the classic Driver OOM.</li>
+                        <li><strong>Executor:</strong> a JVM on a worker VM that actually processes data. It has a fixed
+                            number of <strong>cores (task slots)</strong> and a fixed <strong>memory</strong> budget.
+                        </li>
+                        <li><strong>Slot / core:</strong> one task runs per slot at a time. An executor with 4 cores
+                            runs 4 tasks in parallel. <strong>Total cluster parallelism = executors × cores.</strong>
+                        </li>
+                    </ul>
+                    <div class="box decision-box">
+                        <h4>Why this matters for an FDE</h4>
+                        <p>If a customer's cluster has 10 executors × 4 cores = 40 slots but their job only produces 8
+                            partitions, <strong>32 slots sit idle</strong> and they are paying for hardware doing
+                            nothing. Matching partition count to slot count is a recurring, high-value fix.</p>
+                    </div>
+                </section>
+
+                <section class="section-card anchor-offset" id="lazy">
+                    <span class="badge badge-free">Practise on Community/Free Edition</span>
+                    <h2>2.2 Transformations vs Actions (Lazy Evaluation)</h2>
+                    <p>Spark does <strong>nothing</strong> when you chain transformations. It only builds a recipe (a
+                        logical plan). Work is triggered when an <strong>action</strong> is called. This is why a cell
+                        with five <code>.filter()</code>/<code>.join()</code> calls returns instantly, but
+                        <code>.count()</code> takes minutes.</p>
+                    <div class="code-label">PySpark — nothing executes until the action</div>
+                    <pre><code><span class="comment"># Transformations — lazy, just build the plan. Returns instantly.</span>
+df = spark.read.table("sales.orders")          <span class="comment"># narrow</span>
+df2 = df.filter(df.amount > 100)               <span class="comment"># narrow (no shuffle)</span>
+df3 = df2.groupBy("region").sum("amount")      <span class="comment"># wide  (shuffle!)</span>
+
+<span class="comment"># Action — NOW Spark builds stages and runs tasks.</span>
+df3.show()                                     <span class="comment"># triggers a Job</span></code></pre>
+                    <h3>Narrow vs Wide dependencies</h3>
+                    <ul>
+                        <li><strong>Narrow transformation</strong> (<code>filter</code>, <code>select</code>,
+                            <code>withColumn</code>): each input partition contributes to exactly one output partition.
+                            No data moves between executors. Cheap.</li>
+                        <li><strong>Wide transformation</strong> (<code>groupBy</code>, <code>join</code>,
+                            <code>distinct</code>, <code>orderBy</code>): output partitions depend on many input
+                            partitions, so data is <strong>shuffled</strong> across the network. Expensive — this is
+                            where a <strong>stage boundary</strong> is created.</li>
+                    </ul>
+                    <div class="box gotcha-box">
+                        <h4>⚠️ Common gotcha</h4>
+                        <p>Because evaluation is lazy, an error in a transformation often only surfaces when the action
+                            runs — sometimes many cells later. When debugging a customer notebook, look at the
+                            <em>action</em> that failed, then walk the plan backward.</p>
+                    </div>
+                </section>
+
+                <section class="section-card anchor-offset" id="catalyst">
+                    <span class="badge badge-free">Practise on Community/Free Edition</span>
+                    <h2>2.3 The Catalyst Optimizer — Logical to Physical</h2>
+                    <p>When you trigger an action, your DataFrame code is compiled by <strong>Catalyst</strong>, Spark's
+                        cost-based optimizer, through four stages:</p>
+                    <div class="diagram">Your DataFrame / SQL
+                        │
+                        ▼
+                        1. UNRESOLVED LOGICAL PLAN ── "what" you asked for, columns not yet verified
+                        │ (Analysis: resolve columns/tables against the catalog)
+                        ▼
+                        2. RESOLVED LOGICAL PLAN ── columns & types validated
+                        │ (Logical Optimization: rule-based rewrites)
+                        ▼
+                        3. OPTIMIZED LOGICAL PLAN ── predicate pushdown, constant folding, column pruning
+                        │ (Physical Planning: generate candidate strategies, pick by cost)
+                        ▼
+                        4. PHYSICAL PLAN ── chosen join algorithm, exchange (shuffle) operators
+                        │ (Codegen: compile to JVM bytecode via Whole-Stage CodeGen)
+                        ▼
+                        RDDs executed as tasks</div>
+                    <h3>Key optimizations to be able to name in an interview</h3>
+                    <ul>
+                        <li><strong>Predicate pushdown:</strong> filters are pushed as close to the data source as
+                            possible, so Parquet/Delta only reads the rows/files that can match.</li>
+                        <li><strong>Column pruning:</strong> only the columns you reference are read off disk (columnar
+                            formats make this cheap).</li>
+                        <li><strong>Constant folding:</strong> <code>WHERE 1=1 AND year=2024</code> is simplified at
+                            compile time.</li>
+                        <li><strong>Whole-Stage Code Generation:</strong> collapses a chain of operators into a single
+                            tight JVM function, removing virtual-call overhead.</li>
+                    </ul>
+                    <div class="code-label">Read the plan yourself — the single most useful diagnostic command</div>
+                    <pre><code>df3.explain(mode="formatted")
+
+<span class="comment"># Look for these operators in the output:</span>
+<span class="comment">#   * PhotonScan / FileScan parquet   -> is predicate pushdown happening? (PushedFilters)</span>
+<span class="comment">#   * Exchange hashpartitioning       -> a SHUFFLE (stage boundary, expensive)</span>
+<span class="comment">#   * BroadcastHashJoin vs SortMergeJoin  -> which join strategy did Catalyst pick?</span>
+<span class="comment">#   * AQEShuffleRead coalesced         -> Adaptive Query Execution kicked in</span></code></pre>
+                </section>
+
+                <section class="section-card anchor-offset" id="jobs">
+                    <span class="badge badge-free">Practise on Community/Free Edition</span>
+                    <h2>2.4 Jobs → Stages → Tasks (The Spark UI Hierarchy)</h2>
+                    <p>This is the vocabulary the Spark UI uses. Master it and the UI becomes readable.</p>
+                    <div class="table-scroll">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Unit</th>
+                                    <th>Created by</th>
+                                    <th>Boundary</th>
+                                    <th>Rule of thumb</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>Job</strong></td>
+                                    <td>One <em>action</em> (<code>count</code>, <code>write</code>, <code>show</code>).
+                                    </td>
+                                    <td>The action.</td>
+                                    <td>1 action = 1 job.</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Stage</strong></td>
+                                    <td>A shuffle boundary inside a job.</td>
+                                    <td>Each wide transformation (<code>Exchange</code>).</td>
+                                    <td>N shuffles = N+1 stages.</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Task</strong></td>
+                                    <td>One unit of work per partition, per stage.</td>
+                                    <td>One partition.</td>
+                                    <td>#tasks in a stage = #partitions.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="box strategy-box">
+                        <h4>Reading it in practice</h4>
+                        <p>A job with a <code>groupBy</code> has 2 stages: Stage 0 reads + pre-aggregates (map side),
+                            then an <code>Exchange</code> shuffles, then Stage 1 finishes the aggregation (reduce side).
+                            If Stage 1 has 200 tasks and 199 finish in 2s but 1 runs for 4 minutes, you are looking at
+                            <strong>data skew</strong> — the topic of Chapter 3.</p>
+                    </div>
+                </section>
+
+                <section class="section-card anchor-offset" id="partitions">
+                    <span class="badge badge-free">Practise on Community/Free Edition</span>
+                    <h2>2.5 Partitions — The Unit of Parallelism</h2>
+                    <p>A partition is a chunk of the dataset processed by exactly one task on one slot. Partition count
+                        is the single biggest lever on parallelism and shuffle cost.</p>
+                    <ul>
+                        <li><strong>Too few partitions:</strong> idle slots, giant tasks, memory pressure and spill.
+                        </li>
+                        <li><strong>Too many partitions:</strong> scheduling overhead dominates, tiny wasteful tasks
+                            ("small files"/"small tasks" problem).</li>
+                        <li><strong>Default shuffle partitions:</strong> <code>spark.sql.shuffle.partitions</code>
+                            defaults to 200. On a small cluster that is often too many; on a huge job too few. AQE now
+                            tunes this automatically (see 2.7).</li>
+                    </ul>
+                    <div class="code-label">Inspect and control partitioning</div>
+                    <pre><code>print(df.rdd.getNumPartitions())          <span class="comment"># how many partitions right now</span>
+
+df_repart = df.repartition(64, "region")  <span class="comment"># full shuffle to 64 parts, hashed by region</span>
+df_coal   = df.coalesce(8)                 <span class="comment"># merge to 8 parts WITHOUT full shuffle (narrow)</span>
+
+<span class="comment"># Set shuffle partitions for a session</span>
+spark.conf.set("spark.sql.shuffle.partitions", 64)</code></pre>
+                    <div class="box gotcha-box">
+                        <h4>⚠️ repartition vs coalesce</h4>
+                        <p><code>repartition(n)</code> triggers a full shuffle and can both increase or decrease
+                            partitions and rebalance skew. <code>coalesce(n)</code> only <em>reduces</em> partitions and
+                            avoids a shuffle by merging adjacent ones — cheaper, but can create uneven partitions. Use
+                            <code>coalesce</code> before writing fewer output files; use <code>repartition</code> to fix
+                            skew.</p>
+                    </div>
+                </section>
+
+                <section class="section-card anchor-offset" id="memory">
+                    <span class="badge badge-paid">Realistic tuning needs a cloud cluster</span>
+                    <h2>2.6 The Executor Memory Model & Spill</h2>
+                    <p>Each executor's JVM heap is divided into regions. Knowing them explains <em>why</em> jobs spill
+                        or OOM.</p>
+                    <div class="diagram">Executor JVM heap (spark.executor.memory)
+                        ┌───────────────────────────────────────────────────────────┐
+                        │ Reserved (300 MB, fixed) │
+                        ├───────────────────────────────────────────────────────────┤
+                        │ Unified Memory (spark.memory.fraction, default 0.6) │
+                        │ ┌───────────────────────────┬───────────────────────────┐ │
+                        │ │ Storage (cached data) │ Execution (shuffles, │ │
+                        │ │ can be evicted │ joins, sorts, aggs) │ │
+                        │ │ <───── boundary floats ─────────────────────────────> │ │
+                            │ └───────────────────────────┴───────────────────────────┘ │
+                            ├───────────────────────────────────────────────────────────┤
+                            │ User Memory (0.4) — your UDF objects, data structures │
+                            └───────────────────────────────────────────────────────────┘
+                            + Off-heap / overhead (spark.executor.memoryOverhead) for
+                            Python workers, network buffers, Photon native memory.</div>
+                    <ul>
+                        <li><strong>Execution memory</strong> holds intermediate shuffle/sort/aggregation buffers. When
+                            a task needs more than is free, Spark <strong>spills</strong> the excess to local disk —
+                            correct, but 10–100× slower.</li>
+                        <li><strong>Storage memory</strong> holds <code>cache()</code>/<code>persist()</code> data.
+                            Under pressure it is evicted before execution memory.</li>
+                        <li><strong>Overhead / off-heap</strong> matters heavily for <strong>PySpark UDFs</strong>
+                            (Python worker processes live outside the heap) and for <strong>Photon</strong> (native C++
+                            memory). PySpark OOMs are frequently overhead, not heap.</li>
+                    </ul>
+                    <div class="box warning-box">
+                        <h4>Spill is the #1 silent performance killer</h4>
+                        <p>In the Spark UI's Stage detail, the <strong>"Spill (Memory)"</strong> and <strong>"Spill
+                                (Disk)"</strong> columns tell you a task overflowed. Fixes: more/again-balanced
+                            partitions, larger memory-optimized VMs, avoiding giant explode/cross joins, or enabling
+                            AQE. Chapter 3 walks the full diagnosis.</p>
+                    </div>
+                </section>
+
+                <section class="section-card anchor-offset" id="aqe">
+                    <span class="badge badge-paid">Enabled by default on Databricks Runtime</span>
+                    <h2>2.7 Adaptive Query Execution (AQE)</h2>
+                    <p>AQE re-optimizes the physical plan <em>at runtime</em> using real statistics collected after each
+                        shuffle, rather than trusting compile-time estimates. It is on by default in modern Databricks
+                        Runtime and is a frequent interview topic. Three things it does:</p>
+                    <ul>
+                        <li><strong>Dynamically coalescing shuffle partitions:</strong> if the 200 default shuffle
+                            partitions each end up tiny, AQE merges them into fewer, right-sized partitions — no manual
+                            <code>spark.sql.shuffle.partitions</code> tuning needed.</li>
+                        <li><strong>Dynamically switching join strategy:</strong> if a shuffle reveals one side is
+                            actually small, AQE converts a SortMergeJoin into a BroadcastHashJoin on the fly.</li>
+                        <li><strong>Dynamically handling skew:</strong> AQE detects a skewed partition (much larger than
+                            the median) and <strong>splits it</strong> into sub-partitions so it no longer bottlenecks
+                            one task.</li>
+                    </ul>
+                    <div class="code-label">AQE configuration (defaults shown)</div>
+                    <pre><code>spark.conf.set("spark.sql.adaptive.enabled", True)
+spark.conf.set("spark.sql.adaptive.coalescePartitions.enabled", True)
+spark.conf.set("spark.sql.adaptive.skewJoin.enabled", True)
+
+<span class="comment"># In df.explain() output, AQE nodes appear as:</span>
+<span class="comment">#   AQEShuffleRead coalesced      (partitions merged)</span>
+<span class="comment">#   AQEShuffleRead skewed          (skewed partition split)</span></code></pre>
+                    <div class="box decision-box">
+                        <h4>Interview framing</h4>
+                        <p>"Before AQE I would hand-tune <code>shuffle.partitions</code> and add skew hints. AQE handles
+                            the common cases automatically, but it is reactive — it needs a shuffle to gather stats. For
+                            extreme, known skew I still combine it with salting or broadcast hints." That answer shows
+                            you know both the tool and its limits.</p>
+                    </div>
+                </section>
+
+                <section class="section-card anchor-offset" id="lab">
+                    <span class="badge badge-free">Practise on Community/Free Edition</span>
+                    <h2>2.8 Hands-On Lab — Watch the Plan Change</h2>
+                    <p><strong>Objective:</strong> observe stages, shuffles, and AQE by generating data and reading the
+                        Spark UI + <code>explain()</code>.</p>
+                    <ol>
+                        <li>Create a notebook. Generate a DataFrame:
+                            <code>df = spark.range(0, 20_000_000).withColumn("k", (col("id") % 100))</code>.</li>
+                        <li>Run <code>agg = df.groupBy("k").count()</code> then
+                            <code>agg.explain(mode="formatted")</code>. Find the <code>Exchange hashpartitioning</code>
+                            node — that is your shuffle / stage boundary.</li>
+                        <li>Call the action <code>agg.count()</code>. Open the <strong>Spark UI → Jobs</strong>. Confirm
+                            1 job, 2 stages. Click the shuffle stage and note the number of tasks (partitions).</li>
+                        <li>Force skew:
+                            <code>skewed = df.withColumn("k", when(col("id") &lt; 19_000_000, lit(0)).otherwise(col("id") % 100))</code>.
+                            Group and count again.</li>
+                        <li>In the stage detail, compare task <strong>Duration</strong> and <strong>Shuffle Read
+                                Size</strong> across tasks — one task should dominate. That is skew.</li>
+                        <li>Toggle <code>spark.conf.set("spark.sql.adaptive.skewJoin.enabled", True)</code> and rerun;
+                            look for <code>AQEShuffleRead skewed</code> in the plan and more even tasks.</li>
+                    </ol>
+                    <div class="box strategy-box">
+                        <h4>Expected outcome</h4>
+                        <p>You will see the skewed run has one long-pole task while the others idle, and enabling AQE
+                            skew handling splits that partition so task durations converge. This is exactly the
+                            diagnosis you will perform on real customer jobs in Chapter 3.</p>
+                    </div>
+                </section>
+
+                <section class="section-card anchor-offset" id="qa">
+                    <h2>2.9 Interview Questions & Model Answers</h2>
+
+                    <details class="qa">
+                        <summary><span class="q-text">Explain what happens from the moment you call an action to tasks
+                                running.</span></summary>
+                        <div class="qa-body">
+                            <div class="tell"><strong>What they're testing:</strong> whether you understand the whole
+                                execution pipeline, not just API syntax.</div>
+                            The action triggers a Job. Catalyst compiles my DataFrame through unresolved → resolved →
+                            optimized logical plans, then chooses a physical plan (join strategies, exchanges) by cost,
+                            and generates JVM bytecode via whole-stage codegen. The DAGScheduler splits the job into
+                            stages at shuffle boundaries, and each stage into tasks — one per partition. The
+                            TaskScheduler ships tasks to executor slots; executors process their partition, and for wide
+                            transformations write shuffle files that the next stage reads.
+                        </div>
+                    </details>
+
+                    <details class="qa">
+                        <summary><span class="q-text">What is the difference between a narrow and a wide transformation,
+                                and why do you care?</span></summary>
+                        <div class="qa-body">
+                            <div class="tell"><strong>What they're testing:</strong> understanding of shuffle cost.
+                            </div>
+                            Narrow (filter, select) means each input partition maps to one output partition, so no data
+                            crosses the network. Wide (groupBy, join, distinct) requires data with the same key to land
+                            on the same partition, forcing a shuffle — network + disk I/O and a new stage. I care
+                            because shuffles dominate runtime and cost, so I minimize and optimize them (broadcast small
+                            tables, pre-aggregate, partition sensibly).
+                        </div>
+                    </details>
+
+                    <details class="qa">
+                        <summary><span class="q-text">A job is spilling to disk. Walk me through your diagnosis.</span>
+                        </summary>
+                        <div class="qa-body">
+                            <div class="tell"><strong>What they're testing:</strong> practical Spark UI skill.</div>
+                            In the Spark UI stage detail I check the Spill (Memory)/Spill (Disk) columns and per-task
+                            shuffle read size. Spill means execution memory was exhausted. I first check for skew (one
+                            huge task) — fix with repartition/salting/AQE skew join. If it's uniform pressure, I reduce
+                            partition size (more partitions), remove unnecessary wide ops, cache less, or move to
+                            memory-optimized VMs. I verify by re-running and confirming spill drops to zero.
+                        </div>
+                    </details>
+
+                    <details class="qa">
+                        <summary><span class="q-text">What does AQE do and what are its limits?</span></summary>
+                        <div class="qa-body">
+                            <div class="tell"><strong>What they're testing:</strong> current, real-world Spark
+                                knowledge.</div>
+                            AQE re-optimizes at runtime using post-shuffle statistics: it coalesces tiny shuffle
+                            partitions, switches SortMergeJoin to BroadcastHashJoin when a side is actually small, and
+                            splits skewed partitions. Its limit is that it's reactive — it needs a shuffle to gather
+                            stats, so the first shuffle still runs sub-optimally, and for extreme known skew I
+                            complement it with salting or explicit broadcast hints.
+                        </div>
+                    </details>
+
+                    <details class="qa">
+                        <summary><span class="q-text">Why can a <code>.collect()</code> crash the driver but a
+                                <code>.write()</code> not?</span></summary>
+                        <div class="qa-body">
+                            <div class="tell"><strong>What they're testing:</strong> driver vs executor
+                                responsibilities.</div>
+                            <code>collect()</code> pulls every partition's data back into the single driver JVM, so a
+                            large result exceeds driver heap → OOM. <code>write()</code> is distributed: each executor
+                            writes its own partitions directly to storage, and only small metadata returns to the
+                            driver. For large results I write to a table or use
+                            <code>limit()</code>/<code>take(n)</code> instead of collect.
+                        </div>
+                    </details>
+
+                    <details class="qa">
+                        <summary><span class="q-text">What is whole-stage code generation?</span></summary>
+                        <div class="qa-body">
+                            <div class="tell"><strong>What they're testing:</strong> depth beyond the API.</div>
+                            Catalyst fuses a chain of physical operators within a stage into a single generated JVM
+                            function, eliminating per-row virtual function calls and intermediate object creation. It
+                            makes CPU-bound stages dramatically faster. Photon is the next step — a native C++
+                            vectorized engine that replaces JVM execution for supported operators.
+                        </div>
+                    </details>
+
+                    <details class="qa">
+                        <summary><span class="q-text">How do you decide the number of shuffle partitions?</span>
+                        </summary>
+                        <div class="qa-body">
+                            <div class="tell"><strong>What they're testing:</strong> sizing intuition.</div>
+                            Rule of thumb: aim for partitions of roughly 128–256 MB and at least as many partitions as
+                            total cluster cores so no slot is idle. The default 200 is often wrong for the cluster size.
+                            Today I mostly let AQE coalesce automatically, but I sanity-check by dividing shuffle data
+                            size by ~128 MB and comparing to core count.
+                        </div>
+                    </details>
+
+                    <details class="qa">
+                        <summary><span class="q-text">repartition vs coalesce?</span></summary>
+                        <div class="qa-body">
+                            <div class="tell"><strong>What they're testing:</strong> a very common trap.</div>
+                            <code>repartition(n)</code> does a full shuffle, can increase or decrease partition count,
+                            and rebalances data evenly (good for fixing skew). <code>coalesce(n)</code> only reduces
+                            partitions by merging without a shuffle — cheaper but can leave uneven partitions. I use
+                            coalesce before writing to reduce output file count, and repartition when I need even
+                            distribution.
+                        </div>
+                    </details>
+
+                    <details class="qa">
+                        <summary><span class="q-text">What is predicate pushdown and which formats support it?</span>
+                        </summary>
+                        <div class="qa-body">
+                            <div class="tell"><strong>What they're testing:</strong> I/O efficiency awareness.</div>
+                            Predicate pushdown moves filters down to the scan so the reader skips data that can't match.
+                            Columnar formats like Parquet and Delta support it via file/row-group statistics (min/max)
+                            and, with Delta, data skipping + Z-order/liquid clustering. It's why filtering on a
+                            clustered column reads far fewer files. Row formats like CSV get little benefit.
+                        </div>
+                    </details>
+
+                    <details class="qa">
+                        <summary><span class="q-text">Where does PySpark UDF memory live and why does that
+                                matter?</span></summary>
+                        <div class="qa-body">
+                            <div class="tell"><strong>What they're testing:</strong> Python-on-Spark reality.</div>
+                            Python UDFs run in separate Python worker processes outside the JVM heap, in the executor's
+                            memory overhead region, and require serializing rows between the JVM and Python. That causes
+                            overhead OOMs and slowness. I prefer built-in Spark SQL functions or, if I must use Python,
+                            Pandas/Arrow-optimized UDFs which vectorize the transfer.
+                        </div>
+                    </details>
+
+                    <details class="qa">
+                        <summary><span class="q-text">Cluster has 40 cores but the stage runs 8 tasks. What's wrong and
+                                how do you fix it?</span></summary>
+                        <div class="qa-body">
+                            <div class="tell"><strong>What they're testing:</strong> connecting partitions to cost.
+                            </div>
+                            Only 8 partitions means only 8 of 40 slots work — 80% of the paid hardware is idle and each
+                            task is oversized (spill risk). I'd repartition to at least 40 (ideally a small multiple
+                            like 80–120 for scheduling flexibility) or, at the source, split the input files. If it's
+                            post-shuffle, ensure AQE isn't over-coalescing and raise shuffle partitions.
+                        </div>
+                    </details>
+                </section>
+
+                <div class="page-nav">
+                    <a href="architecture_and_pricing.html">
+                        <div class="dir">◀ Previous</div>
+                        <div class="pg-title">Ch 1 · Architecture & Pricing</div>
+                    </a>
+                    <a class="next" href="performance_tuning.html">
+                        <div class="dir">Next ▶</div>
+                        <div class="pg-title">Ch 3 · Performance Tuning</div>
+                    </a>
+                </div>
+
+            </main>
+
+            <aside class="sidebar-panel">
+                <div class="side-card">
+                    <h3>On This Page</h3>
+                    <ul class="toc">
+                        <li><a href="#topology">2.1 Cluster Topology</a></li>
+                        <li><a href="#lazy">2.2 Lazy Evaluation</a></li>
+                        <li><a href="#catalyst">2.3 Catalyst Optimizer</a></li>
+                        <li><a href="#jobs">2.4 Jobs/Stages/Tasks</a></li>
+                        <li><a href="#partitions">2.5 Partitions</a></li>
+                        <li><a href="#memory">2.6 Memory Model & Spill</a></li>
+                        <li><a href="#aqe">2.7 Adaptive Query Execution</a></li>
+                        <li><a href="#lab">2.8 Hands-On Lab</a></li>
+                        <li><a href="#qa">2.9 Interview Q&A</a></li>
+                    </ul>
+                </div>
+                <div class="side-card">
+                    <h3>Key Numbers to Memorize</h3>
+                    <div class="kpi-grid">
+                        <div class="kpi">
+                            <div class="kpi-value">200</div>
+                            <div class="kpi-label">default shuffle partitions</div>
+                        </div>
+                        <div class="kpi">
+                            <div class="kpi-value">128–256MB</div>
+                            <div class="kpi-label">target partition size</div>
+                        </div>
+                        <div class="kpi">
+                            <div class="kpi-value">0.6</div>
+                            <div class="kpi-label">memory.fraction</div>
+                        </div>
+                        <div class="kpi">
+                            <div class="kpi-value">1</div>
+                            <div class="kpi-label">task per slot at a time</div>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+        </div>
+
+    </div>
+</body>
+
+</html>

@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ch 11 · Interview Question Bank — Databricks FDE Mastery</title>
+    <link rel="icon" type="image/svg+xml"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect x='10' y='10' width='80' height='80' rx='15' fill='%23ff5a36'/><path d='M30 50 L45 65 L70 35' stroke='white' stroke-width='8' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>">
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <div class="container">
+
+        <nav class="navbar">
+            <div class="brand">Databricks <span>FDE</span> Mastery</div>
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="architecture_and_pricing.html">Architecture</a></li>
+                <li><a href="spark_internals.html">Spark Internals</a></li>
+                <li><a href="performance_tuning.html">Performance</a></li>
+                <li><a href="unity_catalog_and_security.html">Governance</a></li>
+                <li><a href="delta_live_tables.html">DLT</a></li>
+                <li><a href="streaming.html">Streaming</a></li>
+                <li><a href="iac_and_ci_cd.html">IaC & CI/CD</a></li>
+                <li><a href="mlflow.html">MLflow</a></li>
+                <li><a href="cost_governance.html">Cost/FinOps</a></li>
+                <li><a href="glossary.html">Glossary</a></li>
+                <li><a href="interview_question_bank.html" class="active">Q&A Bank</a></li>
+                <li><a href="mosaic_ai.html">Mosaic AI</a></li>
+            </ul>
+        </nav>
+
+        <header class="content-header">
+            <div class="eyebrow">Chapter 11 · Interview</div>
+            <h1>The FDE Interview Question Bank</h1>
+            <p>A consolidated drill of the highest-probability questions across every domain, plus the behavioral and
+                scenario rounds that decide FDE offers. Each answer is a model you can say out loud. Practice by reading
+                the question, answering aloud, then expanding the card to compare.</p>
+            <div class="reading-meta"><span>🎯 60+ questions here</span><span>➕ 60+ more in the chapters</span><span>🗣️
+                    Say answers out loud</span></div>
+        </header>
+
+        <div class="main-content">
+
+            <section class="section-card anchor-offset" id="behavioral">
+                <h2>11.1 Behavioral & Consulting (Highest Weight for FDE)</h2>
+                <p>FDE is customer-facing. These decide the loop as much as technical rounds. Use <strong>STAR</strong>
+                    (Situation, Task, Action, Result) and always quantify the result.</p>
+
+                <details class="qa">
+                    <summary><span class="q-text">Tell me about a time you turned around a struggling
+                            customer/stakeholder relationship.</span></summary>
+                    <div class="qa-body">
+                        <div class="tell"><strong>Testing:</strong> consulting maturity, ownership.</div>Use STAR: name
+                        the tension (missed expectations), the action (listened, reset scope, delivered a quick visible
+                        win, over-communicated), and a quantified result (renewed trust, expanded engagement). Emphasize
+                        proactive communication and under-promising/over-delivering.
+                    </div>
+                </details>
+                <details class="qa">
+                    <summary><span class="q-text">You disagree with a customer's technical direction. What do you
+                            do?</span></summary>
+                    <div class="qa-body">
+                        <div class="tell"><strong>Testing:</strong> influence without authority.</div>Seek to understand
+                        their constraints first, then present data/tradeoffs (cost, risk, maintainability) rather than
+                        opinion, offer a small proof to de-risk, and if they still choose their path, document the
+                        tradeoff and support them professionally. Being right matters less than the customer succeeding.
+                    </div>
+                </details>
+                <details class="qa">
+                    <summary><span class="q-text">Describe explaining a deeply technical problem to a non-technical
+                            executive.</span></summary>
+                    <div class="qa-body">
+                        <div class="tell"><strong>Testing:</strong> communication range.</div>Lead with business impact
+                        ("this is costing $X/month and risks the SLA"), use an analogy, avoid jargon, and end with a
+                        clear recommendation and decision needed. Show you can move between whiteboarding Spark
+                        internals and a CFO conversation.
+                    </div>
+                </details>
+                <details class="qa">
+                    <summary><span class="q-text">How do you handle being dropped into an unfamiliar
+                            codebase/environment under time pressure?</span></summary>
+                    <div class="qa-body">
+                        <div class="tell"><strong>Testing:</strong> the core FDE reality.</div>Establish a mental map
+                        fast (architecture, data flow, owners), find the highest-impact problem, deliver an early
+                        visible win to build credibility, and communicate a plan. Comfort with ambiguity and rapid ramp
+                        is the job.
+                    </div>
+                </details>
+                <details class="qa">
+                    <summary><span class="q-text">A deliverable is slipping. How and when do you communicate?</span>
+                    </summary>
+                    <div class="qa-body">
+                        <div class="tell"><strong>Testing:</strong> trust management.</div>Early and proactively — the
+                        moment risk is real, not at the deadline. Give the cause, the revised plan, options/tradeoffs,
+                        and what I need from them. Silence destroys trust; transparent replanning preserves it.
+                    </div>
+                </details>
+                <details class="qa">
+                    <summary><span class="q-text">Why do you want to be an FDE rather than a pure engineer?</span>
+                    </summary>
+                    <div class="qa-body">
+                        <div class="tell"><strong>Testing:</strong> role fit.</div>I like owning outcomes end-to-end
+                        with real customers — combining hands-on engineering with architecture and consulting, seeing my
+                        work adopted, and translating between technical and business worlds. The variety and impact suit
+                        me.
+                    </div>
+                </details>
+            </section>
+
+            <section class="section-card anchor-offset" id="scenario">
+                <h2>11.2 Scenario / System-Design Rounds</h2>
+                <details class="qa">
+                    <summary><span class="q-text">Design an end-to-end ingestion-to-BI platform for a new
+                            customer.</span></summary>
+                    <div class="qa-body">
+                        <div class="tell"><strong>Testing:</strong> synthesizing the whole hub.</div>Auto Loader →
+                        bronze (streaming table) → silver (cleansed + expectations) → gold (aggregates) via DLT in a
+                        medallion layout; Unity Catalog for governance/lineage/masking; Jobs compute +
+                        Trigger.AvailableNow for cost; Terraform + DABs for reproducible deploys and CI/CD; system
+                        tables + tags for FinOps; Databricks SQL/BI on gold. Justify each choice by cost, security, and
+                        maintainability.
+                    </div>
+                </details>
+                <details class="qa">
+                    <summary><span class="q-text">A nightly job runs 6 hours, sometimes OOMs, and 20 nodes didn't help.
+                            Fix it.</span></summary>
+                    <div class="qa-body">
+                        <div class="tell"><strong>Testing:</strong> Ch 2–3 applied.</div>Spark UI first: adding nodes
+                        not helping screams skew, not capacity. Find the long-pole task, confirm skewed join key and/or
+                        spill, fix with AQE skew join / salting / broadcast of the small side, right-size partitions,
+                        enable Photon, and improve file layout (OPTIMIZE + liquid clustering). Verify tasks are balanced
+                        and downsize the cluster — usually big runtime and cost drops.
+                    </div>
+                </details>
+                <details class="qa">
+                    <summary><span class="q-text">Departments share credentials; auditors failed them. Design the
+                            fix.</span></summary>
+                    <div class="qa-body">
+                        <div class="tell"><strong>Testing:</strong> Ch 4 applied.</div>Unity Catalog metastore with
+                        storage credentials + external locations (no shared keys/mounts), group-based RBAC via identity
+                        provider, dynamic column masking + row filters for PII, and <code>system.access.audit</code>
+                        dashboards for who-queried-what. Result: least privilege, full audit trail, passing compliance.
+                    </div>
+                </details>
+                <details class="qa">
+                    <summary><span class="q-text">Bill doubled overnight. Find and stop the bleed.</span></summary>
+                    <div class="qa-body">
+                        <div class="tell"><strong>Testing:</strong> Ch 9 applied.</div>Query
+                        <code>system.billing.usage</code> × <code>list_prices</code> grouped by workload/team/date;
+                        typical causes are always-on All-Purpose clusters, missing autotermination, oversized
+                        warehouses, or a new skewed job. Apply the biggest lever (Jobs compute, autotermination,
+                        right-size), add cluster-policy guardrails and a cost dashboard to prevent recurrence.
+                    </div>
+                </details>
+                <details class="qa">
+                    <summary><span class="q-text">Customer needs sub-minute fraud scoring. Batch or streaming? What
+                            stack?</span></summary>
+                    <div class="qa-body">
+                        <div class="tell"><strong>Testing:</strong> matching architecture to SLA.</div>Real-time:
+                        Structured Streaming (or serving endpoint) with a low-latency feature lookup (Feature Store
+                        online store), model loaded by alias for champion/challenger, idempotent sink, watermark-bounded
+                        state. Contrast with the cheaper batch path I'd use if the SLA were nightly.
+                    </div>
+                </details>
+                <details class="qa">
+                    <summary><span class="q-text">Migrate 500 legacy notebooks with hardcoded mounts and no tests to
+                            production standard.</span></summary>
+                    <div class="qa-body">
+                        <div class="tell"><strong>Testing:</strong> Ch 4 + 7 applied.</div>Replace DBFS mounts with UC
+                        external locations, extract reusable logic into tested Python wheels (pytest), wrap pipelines in
+                        DABs, add CI/CD gates (validate/test/deploy) via GitHub Actions, and stage rollout dev→QA→prod
+                        with cluster policies. Prioritize by business value and de-risk incrementally.
+                    </div>
+                </details>
+            </section>
+
+            <section class="section-card anchor-offset" id="rapid">
+                <h2>11.3 Rapid-Fire Technical (Know Cold)</h2>
+                <details class="qa">
+                    <summary><span class="q-text">Control Plane vs Data Plane?</span></summary>
+                    <div class="qa-body">Control Plane = Databricks-managed UI/scheduling/metadata; Data Plane = where
+                        compute runs and data is processed (Classic in customer VPC, or Serverless).</div>
+                </details>
+                <details class="qa">
+                    <summary><span class="q-text">Classic vs Serverless compute?</span></summary>
+                    <div class="qa-body">Classic runs VMs in the customer's cloud (minutes to start, customer-managed
+                        network); Serverless is Databricks-managed, near-instant, infra cost folded into the DBU rate.
+                    </div>
+                </details>
+                <details class="qa">
+                    <summary><span class="q-text">Narrow vs wide transformation?</span></summary>
+                    <div class="qa-body">Narrow = no shuffle (filter/select); wide = shuffle + new stage
+                        (groupBy/join/distinct).</div>
+                </details>
+                <details class="qa">
+                    <summary><span class="q-text">Job vs stage vs task?</span></summary>
+                    <div class="qa-body">Job = one action; stages split at shuffles (N shuffles = N+1 stages); task =
+                        one partition of a stage.</div>
+                </details>
+                <details class="qa">
+                    <summary><span class="q-text">repartition vs coalesce?</span></summary>
+                    <div class="qa-body">repartition = full shuffle, rebalances, up or down; coalesce = reduce only, no
+                        shuffle, can be uneven.</div>
+                </details>
+                <details class="qa">
+                    <summary><span class="q-text">Broadcast join — when?</span></summary>
+                    <div class="qa-body">When one side is small (~&lt;100MB) so it's copied to every executor, avoiding
+                        a shuffle.</div>
+                </details>
+                <details class="qa">
+                    <summary><span class="q-text">What causes spill and how do you see it?</span></summary>
+                    <div class="qa-body">Execution memory exhausted → data written to local disk. Spark UI stage detail
+                        Spill (Memory/Disk) columns.</div>
+                </details>
+                <details class="qa">
+                    <summary><span class="q-text">Delta time travel?</span></summary>
+                    <div class="qa-body">Query past versions via <code>VERSION AS OF</code> /
+                        <code>TIMESTAMP AS OF</code>, backed by the transaction log; used for audits and rollback.</div>
+                </details>
+                <details class="qa">
+                    <summary><span class="q-text">OPTIMIZE vs VACUUM?</span></summary>
+                    <div class="qa-body">OPTIMIZE compacts small files (and clusters); VACUUM deletes old unreferenced
+                        files past the retention window.</div>
+                </details>
+                <details class="qa">
+                    <summary><span class="q-text">Liquid clustering vs partitioning + Z-Order?</span></summary>
+                    <div class="qa-body">Liquid clustering dynamically organizes by query columns without fixed
+                        partition keys, adapting as queries change; replaces brittle static partitioning + Z-Order.
+                    </div>
+                </details>
+                <details class="qa">
+                    <summary><span class="q-text">Unity Catalog 3-level namespace?</span></summary>
+                    <div class="qa-body"><code>catalog.schema.table</code>, under a regional metastore.</div>
+                </details>
+                <details class="qa">
+                    <summary><span class="q-text">Storage credential vs external location?</span></summary>
+                    <div class="qa-body">Credential = the IAM role/managed identity; external location = an authorized
+                        storage path using that credential.</div>
+                </details>
+                <details class="qa">
+                    <summary><span class="q-text">Streaming table vs materialized view (DLT)?</span></summary>
+                    <div class="qa-body">Streaming table = process each record once (ingest); MV = recompute/refresh
+                        full result (aggregations).</div>
+                </details>
+                <details class="qa">
+                    <summary><span class="q-text">What does SEQUENCE BY do?</span></summary>
+                    <div class="qa-body">Orders CDC events in APPLY CHANGES so late/out-of-order events never overwrite
+                        newer state.</div>
+                </details>
+                <details class="qa">
+                    <summary><span class="q-text">Exactly-once in streaming?</span></summary>
+                    <div class="qa-body">Replayable source + durable checkpoint + idempotent/transactional sink.</div>
+                </details>
+                <details class="qa">
+                    <summary><span class="q-text">Watermark purpose?</span></summary>
+                    <div class="qa-body">Bounds lateness so event-time aggregation state can be evicted; prevents
+                        unbounded state.</div>
+                </details>
+                <details class="qa">
+                    <summary><span class="q-text">DABs vs Terraform?</span></summary>
+                    <div class="qa-body">Terraform provisions workspace infra; DABs packages/deploys code, jobs, and
+                        pipelines across environments.</div>
+                </details>
+                <details class="qa">
+                    <summary><span class="q-text">Jobs vs All-Purpose compute cost?</span></summary>
+                    <div class="qa-body">Jobs compute is much cheaper per DBU (ephemeral, single-purpose); All-Purpose
+                        is interactive/shared.</div>
+                </details>
+                <details class="qa">
+                    <summary><span class="q-text">MLflow aliases vs stages?</span></summary>
+                    <div class="qa-body">UC aliases (@champion/@challenger) are flexible pointers replacing fixed
+                        Staging/Production stages; enable clean promotion and A/B.</div>
+                </details>
+                <details class="qa">
+                    <summary><span class="q-text">Which system tables for cost/audit?</span></summary>
+                    <div class="qa-body"><code>system.billing.usage</code>, <code>system.billing.list_prices</code>,
+                        <code>system.access.audit</code>.</div>
+                </details>
+            </section>
+
+            <section class="section-card anchor-offset" id="mosaic">
+                <h2>11.4 Mosaic AI / Intelligence Platform</h2>
+                <p>These questions reflect Databricks' 2025–2026 strategic direction. Expect at least 2–3 of these in a
+                    current FDE interview loop.</p>
+                <details class="qa">
+                    <summary><span class="q-text">What is Mosaic AI and why is it relevant to an FDE?</span></summary>
+                    <div class="qa-body">
+                        <div class="tell"><strong>Testing:</strong> platform awareness.</div>Mosaic AI is Databricks' AI
+                        layer: Foundation Model APIs, Vector Search, AI/BI Genie, Lakehouse Monitoring, and Databricks
+                        Apps — all governed by Unity Catalog. FDEs must know it because customers increasingly ask for
+                        AI capabilities on their existing lakehouse data, not just ETL pipelines.
+                    </div>
+                </details>
+                <details class="qa">
+                    <summary><span class="q-text">Design a RAG chatbot over a customer's internal knowledge base using
+                            Databricks.</span></summary>
+                    <div class="qa-body">
+                        <div class="tell"><strong>Testing:</strong> end-to-end AI architecture synthesis.</div>Ingest
+                        documents into a Delta bronze table → clean and chunk text in silver via DLT → create a Vector
+                        Search Delta Sync index (TRIGGERED, BGE embeddings) → at query time retrieve top-K chunks by
+                        similarity search → call DBRX Instruct or an external model via FMAPI with context → deploy as a
+                        Streamlit app via Databricks Apps. All governed by UC RBAC. Cost: pay-per-token (no always-on
+                        serving).
+                    </div>
+                </details>
+                <details class="qa">
+                    <summary><span class="q-text">Pay-per-token vs Provisioned Throughput for Foundation Model
+                            APIs?</span></summary>
+                    <div class="qa-body">
+                        <div class="tell"><strong>Testing:</strong> cost/architecture judgement.</div>Pay-per-token: no
+                        idle cost, scales instantly, right for dev/test or &lt;~500K tokens/day. Provisioned Throughput:
+                        guaranteed tokens/sec, reserved capacity, right when daily volume is consistently high or you
+                        have strict latency SLA. Always model daily token volume before recommending PT.
+                    </div>
+                </details>
+                <details class="qa">
+                    <summary><span class="q-text">A business analyst wants to query sales data in plain English. What do
+                            you set up?</span></summary>
+                    <div class="qa-body">
+                        <div class="tell"><strong>Testing:</strong> Genie awareness + speed to value.</div>AI/BI Genie
+                        Space: point it at gold-layer UC tables, write business instructions (KPI definitions, date
+                        conventions, default filters), add verified SQL functions for complex metrics. Inherits UC RBAC
+                        so row-filters apply. Set it up in a day — ideal week-1 quick win that builds stakeholder trust
+                        while you build the proper data model.
+                    </div>
+                </details>
+                <details class="qa">
+                    <summary><span class="q-text">How does Lakehouse Monitoring differ from custom Great Expectations
+                            pipelines?</span></summary>
+                    <div class="qa-body">
+                        <div class="tell"><strong>Testing:</strong> DQ tooling positioning.</div>Lakehouse Monitoring is
+                        first-class UC: attach a monitor to a Delta table, it auto-produces <code>profile_metrics</code>
+                        and <code>drift_metrics</code> tables on a schedule — no code to maintain, lineage tracked,
+                        alertable. GE needs custom pipeline code and separate orchestration. Recommend LHM for standard
+                        statistical DQ on Delta; GE for highly custom assertion logic or existing GE investments.
+                    </div>
+                </details>
+            </section>
+
+            <section class="section-card anchor-offset" id="how">
+                <h2>11.5 How to Use This Bank</h2>
+                <ul>
+                    <li><strong>Drill out loud.</strong> Reading isn't enough — verbalize each answer until it's fluent
+                        and ~45–60 seconds long.</li>
+                    <li><strong>Attach a story.</strong> For behavioral questions, pre-write 4–5 STAR stories you can
+                        flex to multiple prompts.</li>
+                    <li><strong>Quantify everything.</strong> "Cut runtime from 6h to 45m and nodes from 20 to 4 (75%
+                        cost)" beats "made it faster."</li>
+                    <li><strong>Admit tier limits honestly.</strong> Saying "that needs a paid workspace; on Community
+                        I'd demonstrate it with X" builds credibility.</li>
+                    <li><strong>Loop back to the chapters.</strong> Each chapter's own Q&A section adds ~60 more
+                        questions with deeper answers.</li>
+                </ul>
+            </section>
+
+            <div class="page-nav">
+                <a href="glossary.html">
+                    <div class="dir">◀ Previous</div>
+                    <div class="pg-title">Ch 10 · Glossary</div>
+                </a>
+                <a class="next" href="index.html">
+                    <div class="dir">Back to ▶</div>
+                    <div class="pg-title">Home / Curriculum</div>
+                </a>
+            </div>
+        </div>
+
+    </div>
+</body>
+
+</html>

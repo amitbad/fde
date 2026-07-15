@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FDE Prep: Workspace Architecture & DBU Pricing</title>
+    <link rel="icon" type="image/svg+xml"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect x='10' y='10' width='80' height='80' rx='15' fill='%23ff5a36'/><path d='M30 50 L45 65 L70 35' stroke='white' stroke-width='8' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>">
+    <style>
+        :root {
+            --color-bg: #f8fafc;
+            --color-card-bg: #ffffff;
+            --color-text-primary: #0f172a;
+            --color-text-secondary: #334155;
+            --color-text-muted: #64748b;
+            --color-brand-primary: #ff5a36;
+            /* Databricks Orange */
+            --color-brand-secondary: #0f172a;
+            /* Dark Slate */
+            --color-accent-blue: #2563eb;
+            --color-accent-teal: #0d9488;
+            --color-accent-green: #10b981;
+            --color-accent-orange: #ea580c;
+            --color-border: #cbd5e1;
+            --color-border-light: #e2e8f0;
+            --border-radius: 16px;
+            --border-radius-sm: 8px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+            background-color: var(--color-bg);
+            color: var(--color-text-primary);
+            line-height: 1.65;
+            font-size: 16px;
+        }
+
+        .container {
+            width: 95%;
+            max-width: 1500px;
+            margin: 0 auto;
+            padding: 2.5rem 0;
+        }
+
+        /* Top Navigation Bar */
+        .navbar {
+            background-color: var(--color-brand-secondary);
+            color: #ffffff;
+            padding: 1.25rem 2rem;
+            border-radius: var(--border-radius);
+            margin-bottom: 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 15px rgba(15, 23, 42, 0.15);
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .navbar .brand {
+            font-size: 1.35rem;
+            font-weight: 800;
+            letter-spacing: -0.025em;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .navbar .brand span {
+            color: var(--color-brand-primary);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 1.25rem;
+            list-style: none;
+            flex-wrap: wrap;
+        }
+
+        .nav-links a {
+            color: #cbd5e1;
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 600;
+            padding: 0.5rem 0.85rem;
+            border-radius: var(--border-radius-sm);
+            transition: all 0.2s ease;
+        }
+
+        .nav-links a:hover,
+        .nav-links a.active {
+            color: #ffffff;
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        /* Content Header */
+        .content-header {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            color: #ffffff;
+            padding: 2.5rem;
+            border-radius: var(--border-radius);
+            margin-bottom: 2.5rem;
+            box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.1);
+        }
+
+        .content-header h1 {
+            font-size: 2rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+        }
+
+        .content-header p {
+            color: #94a3b8;
+            font-size: 1.05rem;
+        }
+
+        /* Badges */
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 1rem;
+        }
+
+        .badge-paid {
+            background-color: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fca5a5;
+        }
+
+        .badge-free {
+            background-color: #dcfce7;
+            color: #15803d;
+            border: 1px solid #86efac;
+        }
+
+        /* Standard Content Sections */
+        .grid-layout {
+            display: grid;
+            grid-template-columns: 2.2fr 1fr;
+            gap: 2.5rem;
+        }
+
+        @media (max-width: 1200px) {
+            .grid-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            gap: 2.5rem;
+        }
+
+        .section-card {
+            background-color: #ffffff;
+            border-radius: var(--border-radius);
+            border: 1px solid var(--color-border-light);
+            padding: 2.5rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+        }
+
+        .section-card h2 {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--color-brand-secondary);
+            margin-bottom: 1.25rem;
+            border-bottom: 2px solid #f1f5f9;
+            padding-bottom: 0.5rem;
+        }
+
+        .section-card h3 {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: var(--color-text-primary);
+            margin: 1.5rem 0 0.75rem;
+        }
+
+        .section-card p {
+            font-size: 1rem;
+            color: var(--color-text-secondary);
+            margin-bottom: 1.25rem;
+            line-height: 1.7;
+        }
+
+        .section-card ul {
+            list-style: none;
+            margin-bottom: 1.25rem;
+        }
+
+        .section-card ul li {
+            position: relative;
+            padding-left: 1.5rem;
+            margin-bottom: 0.75rem;
+            font-size: 0.95rem;
+            color: var(--color-text-secondary);
+        }
+
+        .section-card ul li::before {
+            content: "•";
+            color: var(--color-brand-primary);
+            font-weight: bold;
+            font-size: 1.2rem;
+            position: absolute;
+            left: 0;
+            top: -0.1rem;
+        }
+
+        /* Block Callouts */
+        .strategy-box {
+            background-color: #ecfdf5;
+            border-left: 4px solid var(--color-accent-green);
+            padding: 1.5rem;
+            border-radius: 0 var(--border-radius-sm) var(--border-radius-sm) 0;
+            margin-bottom: 1.5rem;
+        }
+
+        .strategy-box h4 {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #065f46;
+            margin-bottom: 0.5rem;
+        }
+
+        .strategy-box p {
+            font-size: 0.925rem;
+            color: #065f46;
+            margin-bottom: 0;
+        }
+
+        .decision-box {
+            background-color: #f0f9ff;
+            border-left: 4px solid var(--color-accent-blue);
+            padding: 1.5rem;
+            border-radius: 0 var(--border-radius-sm) var(--border-radius-sm) 0;
+            margin-bottom: 1.5rem;
+        }
+
+        .decision-box h4 {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #0c4a6e;
+            margin-bottom: 0.5rem;
+        }
+
+        .decision-box p {
+            font-size: 0.925rem;
+            color: #0c4a6e;
+            margin-bottom: 0;
+        }
+
+        .pricing-box {
+            background-color: #fff7ed;
+            border-left: 4px solid var(--color-accent-orange);
+            padding: 1.5rem;
+            border-radius: 0 var(--border-radius-sm) var(--border-radius-sm) 0;
+            margin-bottom: 1.5rem;
+        }
+
+        .pricing-box h4 {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #854d0e;
+            margin-bottom: 0.5rem;
+        }
+
+        .pricing-box p {
+            font-size: 0.925rem;
+            color: #7c2d12;
+            margin-bottom: 0;
+        }
+
+        /* Code Block */
+        pre {
+            background-color: var(--color-brand-secondary);
+            color: #e2e8f0;
+            padding: 1.25rem;
+            border-radius: var(--border-radius-sm);
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.875rem;
+            overflow-x: auto;
+            margin-bottom: 1.25rem;
+            border: 1px solid #334155;
+        }
+
+        /* Sidebar Cards */
+        .sidebar-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+            position: sticky;
+            top: 2rem;
+        }
+
+        .side-card {
+            background-color: #ffffff;
+            border-radius: var(--border-radius);
+            border: 1px solid var(--color-border-light);
+            padding: 2rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+        }
+
+        .side-card h3 {
+            font-size: 1.15rem;
+            font-weight: 800;
+            color: var(--color-brand-secondary);
+            margin-bottom: 1rem;
+            border-bottom: 2px solid #f1f5f9;
+            padding-bottom: 0.5rem;
+        }
+
+        .checklist {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .checklist-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+            color: var(--color-text-secondary);
+        }
+
+        .checklist-item::before {
+            content: "⬜";
+            font-size: 0.8rem;
+            margin-top: 0.15rem;
+        }
+
+        .checklist-item.checked::before {
+            content: "✅";
+        }
+
+        /* Comparison Table */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+            font-size: 0.9rem;
+            border: 1px solid var(--color-border-light);
+            border-radius: var(--border-radius-sm);
+            overflow: hidden;
+        }
+
+        th {
+            background-color: #f1f5f9;
+            font-weight: 700;
+            color: var(--color-brand-secondary);
+            text-align: left;
+            padding: 0.85rem 1.25rem;
+            border-bottom: 2px solid var(--color-border);
+        }
+
+        td {
+            padding: 0.85rem 1.25rem;
+            border-bottom: 1px solid var(--color-border-light);
+            color: var(--color-text-secondary);
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+    </style>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+
+    <div class="container">
+
+        <!-- Navigation Bar -->
+        <nav class="navbar">
+            <div class="brand">Databricks <span>FDE</span> Mastery</div>
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="architecture_and_pricing.html" class="active">Architecture</a></li>
+                <li><a href="spark_internals.html">Spark Internals</a></li>
+                <li><a href="performance_tuning.html">Performance</a></li>
+                <li><a href="unity_catalog_and_security.html">Governance</a></li>
+                <li><a href="delta_live_tables.html">DLT</a></li>
+                <li><a href="streaming.html">Streaming</a></li>
+                <li><a href="iac_and_ci_cd.html">IaC & CI/CD</a></li>
+                <li><a href="mlflow.html">MLflow</a></li>
+                <li><a href="cost_governance.html">Cost/FinOps</a></li>
+                <li><a href="glossary.html">Glossary</a></li>
+                <li><a href="interview_question_bank.html">Q&A Bank</a></li>
+                <li><a href="mosaic_ai.html">Mosaic AI</a></li>
+            </ul>
+        </nav>
+
+        <!-- Content Header -->
+        <header class="content-header">
+            <h1>Workspace Architecture & Pricing Economics</h1>
+            <p>Master Control/Data Plane models, Multi-Workspace structures, secure networking topologies, and core DBU
+                pricing math.</p>
+        </header>
+
+        <!-- Main Layout Split -->
+        <div class="grid-layout">
+
+            <!-- Main Column -->
+            <main class="main-content">
+
+                <!-- Section 1: Classic vs. Serverless -->
+                <section class="section-card">
+                    <span class="badge badge-free">Trial / Community Compliant</span>
+                    <h2>1. Control Plane vs. Data Plane</h2>
+                    <p>
+                        Databricks separates platform operations into two distinct domains: the <strong>Control
+                            Plane</strong> and the <strong>Data Plane</strong>. This architecture is critical for
+                        security, data isolation, and performance optimization.
+                    </p>
+
+                    <h3>Control Plane (Databricks Account)</h3>
+                    <p>
+                        Resides in Databricks' own cloud provider account. Handles administrative operations, cluster
+                        management, the web workspace, SQL query history, metadata storage, security access
+                        coordination, and job scheduling. It *never* processes or touches customer production datasets
+                        directly.
+                    </p>
+
+                    <h3>Data Plane (Customer Account or Databricks Serverless)</h3>
+                    <p>
+                        Where the actual processing of datasets and compute workloads occurs. Databricks splits this
+                        into two physical models:
+                    </p>
+
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Deployment Model</th>
+                                <th>Where Compute Resides</th>
+                                <th>Security & VPC Ownership</th>
+                                <th>Resource Boot Time</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Classic Classic (VPC/VNet)</strong></td>
+                                <td>Inside Customer's cloud subscription (VPC / VNet).</td>
+                                <td>Fully managed by customer network policies and firewalls.</td>
+                                <td>3 to 7 minutes (virtual machine scaling latency).</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Serverless Compute</strong></td>
+                                <td>Inside a Databricks-owned secure, virtualized compute account.</td>
+                                <td>Isolated, rapid ephemeral resources managed by Databricks.</td>
+                                <td>Under 10 seconds (fully optimized serverless pools).</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="decision-box">
+                        <h4>💡 Architecture Decision Pattern</h4>
+                        <p>
+                            Choose <strong>Classic Classic</strong> when highly strict corporate compliance mandates
+                            that compute Virtual Machines *must* exist within customer-owned subnets. Choose
+                            <strong>Serverless</strong> for SQL Warehouses and Serverless Sprints to bypass cluster
+                            startup lag, eliminate idle instance costs, and let Databricks manage security patches
+                            automatically.
+                        </p>
+                    </div>
+                </section>
+
+                <!-- Section 2: Multi-Workspace Environments -->
+                <section class="section-card">
+                    <span class="badge badge-paid">Paid Cloud Subscription Required</span>
+                    <h2>2. Enterprise Multi-Workspace Architecture</h2>
+                    <p>
+                        Production environments must separate Dev, QA/Stage, and Production workloads. Large enterprises
+                        use dedicated workspace configurations to isolate code testing from sensitive business data.
+                    </p>
+
+                    <h3>Isolating Workspaces & Catalogs</h3>
+                    <ul>
+                        <li><strong>Sandbox/Dev Workspaces:</strong> Dedicated environments for engineering,
+                            exploration, and notebook writing. Users can deploy local interactive clusters.</li>
+                        <li><strong>QA/Staging Workspaces:</strong> Where integration, regression testing, and code
+                            package testing occur. This mirrors production configurations.</li>
+                        <li><strong>Production Workspaces:</strong> Strictly locked down. Workloads are automated using
+                            workflows or DABs. Standard developers have no write or run permissions directly in this UI.
+                        </li>
+                    </ul>
+
+                    <div class="strategy-box">
+                        <h4>FDE Value-Add: Platform Lifecycle Control</h4>
+                        <p>
+                            Manually deploying tables and workspaces across environments introduces human configuration
+                            errors and leads to failed security audits. Deploy workspaces and cluster policies
+                            programmatically using **Terraform** so environments remain completely uniform.
+                        </p>
+                    </div>
+                </section>
+
+                <!-- Section 3: Network Topologies -->
+                <section class="section-card">
+                    <span class="badge badge-paid">Paid Cloud Subscription Required</span>
+                    <h2>3. Cloud Network Topology & Security</h2>
+                    <p>
+                        Securing the flow of data between the Control Plane, customer VPC, and cloud storage (e.g.,
+                        S3/ADLS) is critical for enterprise security audits.
+                    </p>
+
+                    <h3>Private Link / Private Endpoints</h3>
+                    <p>
+                        By default, communications between planes occur over secure public cloud networks. FDEs
+                        implement **Private Link** (AWS) or **Private Endpoints** (Azure) to route traffic entirely over
+                        secure private cloud backbones, bypassing the public internet:
+                    </p>
+                    <ul>
+                        <li><strong>Front-End Connection:</strong> Restricts workspace UI access to corporate networks
+                            or VPNs.</li>
+                        <li><strong>Back-End Connection:</strong> Securely links the Databricks Control Plane to the
+                            Data Plane VPC without exposing public routing IPs.</li>
+                    </ul>
+
+                    <h3>Customer-Managed Keys (CMK)</h3>
+                    <p>
+                        Allows enterprises to encrypt cloud objects (DBFS storage bucket, notebook source code metadata)
+                        using their own KMS/Key Vault keys, ensuring data cannot be read by anyone else, including cloud
+                        provider administrators.
+                    </p>
+                </section>
+
+                <!-- Section 4: Pricing Economics & DBU Math -->
+                <section class="section-card">
+                    <span class="badge badge-free">Trial / Community Compliant</span>
+                    <h2>4. DBU Economics & Sizing Formulas</h2>
+                    <p>
+                        Databricks bills compute workloads based on **DBUs (Databricks Units)** consumed per hour,
+                        multiplied by the DBU cost of the workload type and the cloud provider VM charges.
+                    </p>
+
+                    <div class="pricing-box">
+                        <h4>📊 Pricing Comparison: All-Purpose vs. Jobs Compute</h4>
+                        <p>
+                            Workloads are billed differently depending on the cluster type. For AWS Premium/Enterprise
+                            tiers:
+                            <br>• <strong>All-Purpose Compute (Interactive Notebooks):</strong> ~$0.40 per DBU
+                            <br>• <strong>Jobs Compute (Automated Workflows):</strong> ~$0.15 per DBU (Almost 2.7x
+                            cheaper!)
+                        </p>
+                    </div>
+
+                    <h3>Real-World DBU Sizing Math</h3>
+                    <p>
+                        Suppose a daily ingestion pipeline runs for <strong>10 hours</strong> on a cluster of <strong>4
+                            nodes</strong> (plus 1 driver, totaling 5 VMs). Each VM size (e.g., <code>m5.2xlarge</code>)
+                        consumes <strong>1.5 DBUs per hour</strong>.
+                    </p>
+
+                    <pre>
+Total Cluster DBUs per Hour:
+  5 VMs × 1.5 DBUs/hour = 7.5 DBUs/hour
+
+Scenario A: Running as an Interactive Notebook (All-Purpose DBU rates)
+  7.5 DBUs/hr × 10 hours × $0.40/DBU = $30.00 in DBU charges
+
+Scenario B: Running as an Automated Workflow Job (Jobs DBU rates)
+  7.5 DBUs/hr × 10 hours × $0.15/DBU = $11.25 in DBU charges
+
+Weekly Savings (Moving to Jobs Compute):
+  Interactive: $30.00 × 7 days = $210.00
+  Automated: $11.25 × 7 days = $78.75
+  FDE Cost Savings: $131.25 per week (62.5% Savings!)
+                    </pre>
+
+                    <p>
+                        This basic DBU math scales up to millions of dollars when applied across thousands of enterprise
+                        cluster hours.
+                    </p>
+                </section>
+
+                <!-- Section 5: Hands-on Exercise -->
+                <section class="section-card">
+                    <span class="badge badge-free">Trial / Community Compliant</span>
+                    <h2>5. Lab: Cluster Sizing & DBU Optimization</h2>
+
+                    <h3>Objective</h3>
+                    <p>Design a cost-estimating spreadsheet for a nightly ingestion workflow and migrate it from
+                        interactive cluster execution to an automated job cluster.</p>
+
+                    <h3>Steps to Complete</h3>
+                    <ul>
+                        <li><strong>Step 1 (Sizing):</strong> Analyze the average data volume of a nightly CSV upload
+                            (approx 50GB).</li>
+                        <li><strong>Step 2 (Selection):</strong> Identify an optimal node instance size. For typical
+                            memory-heavy joins, select memory-optimized VMs (e.g., <code>r5.xlarge</code> which consumes
+                            1 DBU/hour).</li>
+                        <li><strong>Step 3 (Configuration):</strong> Open the Workflows UI in Databricks. Create a new
+                            task.</li>
+                        <li><strong>Step 4 (Migration):</strong> Link your PySpark notebook to this task. Rather than
+                            utilizing an active "All-Purpose" cluster, configure a brand new <strong>"Job
+                                Cluster"</strong> with 1 Driver and 3 Workers (total 4 nodes, 4 DBUs/hour).</li>
+                        <li><strong>Step 5 (Automation):</strong> Schedule the task to trigger at 2:00 AM daily.</li>
+                    </ul>
+                </section>
+
+                <section class="section-card">
+                    <h2>Interview Questions & Model Answers</h2>
+                    <details class="qa">
+                        <summary><span class="q-text">Explain the Control Plane vs Data Plane split and why it matters
+                                for security.</span></summary>
+                        <div class="qa-body">
+                            <div class="tell"><strong>Testing:</strong> the #1 architecture fundamental.</div>The
+                            Control Plane is Databricks-managed (web UI, job scheduling, cluster management, metadata)
+                            and never processes customer data. The Data Plane is where compute runs and data is
+                            read/written — either Classic (VMs in the customer's own VPC/VNet, so data never leaves
+                            their network) or Serverless (Databricks-managed compute). This split lets enterprises keep
+                            data in their security perimeter while Databricks operates the platform.
+                        </div>
+                    </details>
+                    <details class="qa">
+                        <summary><span class="q-text">Classic vs Serverless compute — how do you choose?</span>
+                        </summary>
+                        <div class="qa-body">
+                            <div class="tell"><strong>Testing:</strong> a real architecture decision.</div>Classic when
+                            strict compliance requires VMs inside the customer's own subnets or custom
+                            networking/instances. Serverless for fast startup, no idle cost, and lower ops — ideal for
+                            SQL warehouses and bursty jobs. Serverless folds infra cost into the DBU rate; Classic bills
+                            the cloud VMs separately.
+                        </div>
+                    </details>
+                    <details class="qa">
+                        <summary><span class="q-text">Walk me through the full cost of a 10-hour, 5-node job as
+                                interactive vs a job cluster.</span></summary>
+                        <div class="qa-body">
+                            <div class="tell"><strong>Testing:</strong> DBU math fluency.</div>Compute DBUs/hr = nodes ×
+                            DBU/node. Multiply by hours and the per-DBU rate for the workload type. All-Purpose
+                            (interactive) has a much higher rate than Jobs compute, so moving the same cluster to a job
+                            cluster can cut the DBU charge ~2–3×, plus the cloud VM bill on top. I'd quantify both and
+                            recommend Jobs compute + autotermination.
+                        </div>
+                    </details>
+                    <details class="qa">
+                        <summary><span class="q-text">What is Private Link and which connections does it secure?</span>
+                        </summary>
+                        <div class="qa-body">
+                            <div class="tell"><strong>Testing:</strong> enterprise networking.</div>Private Link (AWS) /
+                            Private Endpoints (Azure) route traffic over the cloud's private backbone instead of the
+                            public internet. Front-end secures user→workspace access (lock to corporate network);
+                            back-end secures Control Plane→Data Plane without public IPs. Combined with CMK, it
+                            satisfies strict security audits.
+                        </div>
+                    </details>
+                    <details class="qa">
+                        <summary><span class="q-text">Why separate Dev/QA/Prod workspaces?</span></summary>
+                        <div class="qa-body">
+                            <div class="tell"><strong>Testing:</strong> platform lifecycle.</div>Isolation of blast
+                            radius, data sensitivity, and permissions: developers explore freely in Dev,
+                            integration/regression runs in QA, and Prod is locked down to automated deploys only. I
+                            provision them identically via Terraform so config drift can't cause an audit failure or a
+                            "works in dev" surprise.
+                        </div>
+                    </details>
+                    <details class="qa">
+                        <summary><span class="q-text">What can't you do on Community Edition, and how do you still
+                                demonstrate value?</span></summary>
+                        <div class="qa-body">
+                            <div class="tell"><strong>Testing:</strong> tier honesty.</div>No custom VPC, Private Link,
+                            CMK, Unity Catalog, Workflows, or DBU billing. I'd say so plainly and demonstrate the
+                            concepts on a paid trial, or prove the compute/Spark fundamentals on Community and describe
+                            exactly how the enterprise features layer on.
+                        </div>
+                    </details>
+                </section>
+
+            </main>
+
+            <!-- Sidebar -->
+            <aside class="sidebar-panel">
+
+                <!-- Free vs Paid Warning -->
+                <div class="side-card" style="border-top: 4px solid var(--color-accent-orange);">
+                    <h3>Trial vs. Enterprise Limits</h3>
+                    <p
+                        style="font-size: 0.85rem; color: var(--color-text-secondary); line-height: 1.5; margin-bottom: 1rem;">
+                        <strong>Databricks Community Edition</strong> is free but operates entirely in a shared control
+                        plane. You cannot connect cloud virtual networks, provision custom VPCs, configure Private Link,
+                        link Customer-Managed Keys, or access Workflows/DBU billing math.
+                    </p>
+                    <p style="font-size: 0.85rem; color: var(--color-text-secondary); line-height: 1.5;">
+                        To test network security, Private Link, and CMK, you must register for a <strong>Databricks
+                            14-Day Full Premium/Enterprise Trial</strong> connected to a paid AWS, Azure, or Google
+                        Cloud account.
+                    </p>
+                </div>
+
+                <!-- Next Steps Checklist -->
+                <div class="side-card">
+                    <h3>Next Study Steps</h3>
+                    <ul class="checklist">
+                        <li class="checklist-item checked">Study Control Plane vs. Data Plane roles</li>
+                        <li class="checklist-item">Download Cloud Architecture Network PDF</li>
+                        <li class="checklist-item">Practice All-Purpose vs. Jobs pricing formulas</li>
+                        <li class="checklist-item">Launch a test Job task in Databricks workflow UI</li>
+                    </ul>
+                </div>
+
+            </aside>
+
+        </div>
+
+        <div class="page-nav">
+            <a href="index.html">
+                <div class="dir">◀ Home</div>
+                <div class="pg-title">Curriculum Overview</div>
+            </a>
+            <a class="next" href="spark_internals.html">
+                <div class="dir">Next ▶</div>
+                <div class="pg-title">Ch 2 · Spark Internals</div>
+            </a>
+        </div>
+
+    </div>
+
+</body>
+
+</html>

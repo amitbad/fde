@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ch 10 · Glossary — Databricks FDE Mastery</title>
+    <link rel="icon" type="image/svg+xml"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect x='10' y='10' width='80' height='80' rx='15' fill='%23ff5a36'/><path d='M30 50 L45 65 L70 35' stroke='white' stroke-width='8' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>">
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <div class="container">
+
+        <nav class="navbar">
+            <div class="brand">Databricks <span>FDE</span> Mastery</div>
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="architecture_and_pricing.html">Architecture</a></li>
+                <li><a href="spark_internals.html">Spark Internals</a></li>
+                <li><a href="performance_tuning.html">Performance</a></li>
+                <li><a href="unity_catalog_and_security.html">Governance</a></li>
+                <li><a href="delta_live_tables.html">DLT</a></li>
+                <li><a href="streaming.html">Streaming</a></li>
+                <li><a href="iac_and_ci_cd.html">IaC & CI/CD</a></li>
+                <li><a href="mlflow.html">MLflow</a></li>
+                <li><a href="cost_governance.html">Cost/FinOps</a></li>
+                <li><a href="glossary.html" class="active">Glossary</a></li>
+                <li><a href="interview_question_bank.html">Q&A Bank</a></li>
+                <li><a href="mosaic_ai.html">Mosaic AI</a></li>
+            </ul>
+        </nav>
+
+        <header class="content-header">
+            <div class="eyebrow">Chapter 10 · Reference</div>
+            <h1>Glossary — Every Term in One Place</h1>
+            <p>A fast-lookup reference for every concept in the hub. Skim it the night before an interview to lock in
+                precise vocabulary — using the right word (e.g. "Exchange" for a shuffle, "SEQUENCE BY" for CDC
+                ordering) signals real hands-on experience.</p>
+        </header>
+
+        <div class="main-content">
+
+            <section class="section-card">
+                <h2>A–C</h2>
+                <div class="table-scroll">
+                    <table>
+                        <tbody>
+                            <tr>
+                                <td style="width:22%"><strong>ACID</strong></td>
+                                <td>Atomicity, Consistency, Isolation, Durability. Delta Lake brings ACID transactions
+                                    to data-lake files via its transaction log.</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Adaptive Query Execution (AQE)</strong></td>
+                                <td>Runtime re-optimization of a Spark plan using post-shuffle stats: coalesces
+                                    partitions, switches joins, splits skew. On by default.</td>
+                            </tr>
+                            <tr>
+                                <td><strong>All-Purpose Compute</strong></td>
+                                <td>Interactive, shareable clusters for notebooks. Higher DBU rate than Jobs compute.
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><strong>APPLY CHANGES INTO</strong></td>
+                                <td>DLT CDC syntax that merges a change feed into a target, maintaining SCD Type 1/2
+                                    with <code>SEQUENCE BY</code> ordering.</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Auto Loader (cloudFiles)</strong></td>
+                                <td>Incremental cloud-file ingestion with schema inference/evolution and built-in file
+                                    tracking.</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Autotermination</strong></td>
+                                <td>Cluster setting that shuts idle compute down after N minutes — a top cost lever.
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><strong>Bronze / Silver / Gold</strong></td>
+                                <td>Medallion layers: raw history / cleansed-conformed / business aggregates.</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Catalyst</strong></td>
+                                <td>Spark's cost-based optimizer: logical → optimized → physical plan, plus whole-stage
+                                    codegen.</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Checkpoint</strong></td>
+                                <td>Durable directory storing a stream's source offsets and state; the basis of
+                                    exactly-once recovery.</td>
+                            </tr>
+                            <tr>
+                                <td><strong>coalesce(n)</strong></td>
+                                <td>Reduce partitions without a full shuffle (may leave uneven partitions).</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Control Plane</strong></td>
+                                <td>Databricks-managed services: UI, job scheduling, metadata. Never touches customer
+                                    data directly.</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Cost of Delay / DBU</strong></td>
+                                <td>DBU = Databricks Unit, the normalized unit of compute consumption billed per hour.
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section class="section-card">
+                <h2>D–G</h2>
+                <div class="table-scroll">
+                    <table>
+                        <tbody>
+                            <tr>
+                                <td style="width:22%"><strong>DABs</strong></td>
+                                <td>Databricks Asset Bundles — declarative packaging/deploying of jobs, pipelines, and
+                                    code across environments.</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Data Plane</strong></td>
+                                <td>Where compute runs and data is processed: Classic (customer VPC) or Serverless
+                                    (Databricks-managed).</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Data Skew</strong></td>
+                                <td>Uneven key distribution causing one task/partition to dominate runtime. Fixed with
+                                    salting, AQE skew join, broadcast.</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Delta Lake</strong></td>
+                                <td>Open storage layer adding ACID, time travel, schema enforcement, and data skipping
+                                    to Parquet.</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Delta Sharing</strong></td>
+                                <td>Open protocol for secure, real-time data sharing without replication, even to
+                                    non-Databricks recipients.</td>
+                            </tr>
+                            <tr>
+                                <td><strong>DLT</strong></td>
+                                <td>Delta Live Tables — declarative pipeline framework with dependency inference,
+                                    expectations, and lineage.</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Exchange</strong></td>
+                                <td>The physical-plan operator representing a shuffle / stage boundary.</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Executor</strong></td>
+                                <td>Worker JVM that runs tasks; has fixed cores (slots) and memory.</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Expectations</strong></td>
+                                <td>DLT declarative data-quality rules: <code>expect</code> /
+                                    <code>expect_or_drop</code> / <code>expect_or_fail</code>.</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Feature Store</strong></td>
+                                <td>Governed feature tables ensuring identical train/serve feature computation; offline
+                                    + online stores.</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Governance</strong></td>
+                                <td>Centralized control of access, lineage, and audit — delivered by Unity Catalog.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section class="section-card">
+                <h2>H–P</h2>
+                <div class="table-scroll">
+                    <table>
+                        <tbody>
+                            <tr>
+                                <td style="width:22%"><strong>IaC</strong></td>
+                                <td>Infrastructure as Code — declaring infra (Terraform) so environments are
+                                    reproducible and audited.</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Jobs Compute</strong></td>
+                                <td>Ephemeral, single-purpose clusters for automated workloads at a much lower DBU rate.
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><strong>Liquid Clustering</strong></td>
+                                <td>Dynamic Delta file organization by query columns; replaces static partitioning +
+                                    Z-Order.</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Materialized View</strong></td>
+                                <td>DLT dataset whose full result is (incrementally) recomputed when inputs change; for
+                                    aggregations/joins.</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Metastore</strong></td>
+                                <td>Top-level Unity Catalog container (one per region) holding catalogs/schemas/tables.
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><strong>MLflow</strong></td>
+                                <td>Open-source ML lifecycle: Tracking, Models, Registry, Serving.</td>
+                            </tr>
+                            <tr>
+                                <td><strong>OPTIMIZE / VACUUM</strong></td>
+                                <td>Delta maintenance: compact small files / delete old unreferenced files past
+                                    retention.</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Partition</strong></td>
+                                <td>A chunk of data processed by one task on one slot; the unit of parallelism.</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Photon</strong></td>
+                                <td>Native C++ vectorized execution engine that speeds CPU-bound SQL/ETL.</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Predicate Pushdown</strong></td>
+                                <td>Pushing filters to the scan so only matching data is read (Parquet/Delta).</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Private Link / Endpoint</strong></td>
+                                <td>Private cloud networking between planes/storage, bypassing the public internet.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section class="section-card">
+                <h2>M–P (new)</h2>
+                <div class="table-scroll">
+                    <table>
+                        <tbody>
+                            <tr>
+                                <td style="width:22%"><strong>Mosaic AI</strong></td>
+                                <td>Databricks' umbrella AI layer: Foundation Model APIs, Vector Search, AI/BI Genie,
+                                    Lakehouse Monitoring, Model Serving, and Databricks Apps — all governed by Unity
+                                    Catalog.</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Foundation Model API (FMAPI)</strong></td>
+                                <td>Pay-per-token or provisioned-throughput access to curated LLMs (DBRX, Llama,
+                                    Mistral) and external model routing (OpenAI, Anthropic) via a single UC-governed
+                                    endpoint.</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Vector Search</strong></td>
+                                <td>Databricks-managed serverless vector database synced from a Delta table; used for
+                                    similarity search in RAG applications.</td>
+                            </tr>
+                            <tr>
+                                <td><strong>RAG (Retrieval-Augmented Generation)</strong></td>
+                                <td>Pattern: retrieve relevant chunks from Vector Search, inject as context into a
+                                    prompt, then call an LLM for a grounded answer without hallucination.</td>
+                            </tr>
+                            <tr>
+                                <td><strong>AI/BI Genie</strong></td>
+                                <td>Conversational BI layer — users ask questions in plain English, Genie generates SQL
+                                    against UC-governed gold tables and returns charts.</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Lakehouse Monitoring</strong></td>
+                                <td>Automatic statistical profiling and drift detection on Delta tables; produces
+                                    <code>profile_metrics</code> and <code>drift_metrics</code> analysis tables in UC.
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><strong>Databricks Apps</strong></td>
+                                <td>Native hosting of Streamlit / Gradio / Dash web apps inside Databricks, inheriting
+                                    UC auth and scaling to zero when idle.</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Predictive Optimization</strong></td>
+                                <td>Auto-runs OPTIMIZE and VACUUM on UC-managed tables based on observed query patterns;
+                                    eliminates manual compaction cron jobs.</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Lakehouse Federation</strong></td>
+                                <td>UC feature enabling direct SQL queries across external databases (PostgreSQL,
+                                    Snowflake, BigQuery) without ETL — data stays in the source system.</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Provisioned Throughput</strong></td>
+                                <td>Dedicated Foundation Model serving capacity (tokens/second guaranteed); use when
+                                    daily volume exceeds ~500K tokens or strict latency SLA is required.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section class="section-card">
+                <h2>R–Z</h2>
+                <div class="table-scroll">
+                    <table>
+                        <tbody>
+                            <tr>
+                                <td style="width:22%"><strong>repartition(n)</strong></td>
+                                <td>Full shuffle to n partitions; rebalances data (fixes skew), can increase or decrease
+                                    count.</td>
+                            </tr>
+                            <tr>
+                                <td><strong>SCD Type 1 / 2</strong></td>
+                                <td>Slowly Changing Dimension: overwrite current (1) vs keep full history with validity
+                                    windows (2).</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Serverless</strong></td>
+                                <td>Databricks-managed compute with near-instant start and folded infra cost; no
+                                    customer VMs to manage.</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Shuffle</strong></td>
+                                <td>Network redistribution of data by key for wide transformations; the main cost
+                                    driver.</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Skew Join Hint</strong></td>
+                                <td>Hint (or AQE) that splits skewed keys so one task doesn't bottleneck a join.</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Spill</strong></td>
+                                <td>Task overflowing execution memory to local disk; 10–100× slower, visible in Spark
+                                    UI.</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Storage Credential / External Location</strong></td>
+                                <td>UC objects that securely delegate cloud storage access via an IAM role/managed
+                                    identity + authorized path.</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Streaming Table</strong></td>
+                                <td>DLT dataset that processes each source record once, incrementally (ingestion).</td>
+                            </tr>
+                            <tr>
+                                <td><strong>System Tables</strong></td>
+                                <td>UC-governed Delta tables (<code>system.billing.*</code>,
+                                    <code>system.access.audit</code>) for cost and audit analytics.</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Unity Catalog (UC)</strong></td>
+                                <td>Central governance layer: 3-level namespace, RBAC, lineage, masking, audit, Delta
+                                    Sharing.</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Watermark</strong></td>
+                                <td>Max lateness tolerated for event-time aggregation; lets Spark evict old state.</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Whole-Stage CodeGen</strong></td>
+                                <td>Fusing operators in a stage into one compiled JVM function to remove per-row
+                                    overhead.</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Z-Order</strong></td>
+                                <td>Legacy multi-column data-skipping layout; largely superseded by Liquid Clustering.
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <div class="page-nav">
+                <a href="cost_governance.html">
+                    <div class="dir">◀ Previous</div>
+                    <div class="pg-title">Ch 9 · Cost Governance</div>
+                </a>
+                <a class="next" href="interview_question_bank.html">
+                    <div class="dir">Next ▶</div>
+                    <div class="pg-title">Ch 11 · Interview Question Bank</div>
+                </a>
+            </div>
+        </div>
+
+    </div>
+</body>
+
+</html>

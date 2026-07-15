@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ch 9 · Cost Governance / FinOps — Databricks FDE Mastery</title>
+    <link rel="icon" type="image/svg+xml"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect x='10' y='10' width='80' height='80' rx='15' fill='%23ff5a36'/><path d='M30 50 L45 65 L70 35' stroke='white' stroke-width='8' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>">
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <div class="container">
+
+        <nav class="navbar">
+            <div class="brand">Databricks <span>FDE</span> Mastery</div>
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="architecture_and_pricing.html">Architecture</a></li>
+                <li><a href="spark_internals.html">Spark Internals</a></li>
+                <li><a href="performance_tuning.html">Performance</a></li>
+                <li><a href="unity_catalog_and_security.html">Governance</a></li>
+                <li><a href="delta_live_tables.html">DLT</a></li>
+                <li><a href="streaming.html">Streaming</a></li>
+                <li><a href="iac_and_ci_cd.html">IaC & CI/CD</a></li>
+                <li><a href="mlflow.html">MLflow</a></li>
+                <li><a href="cost_governance.html" class="active">Cost/FinOps</a></li>
+                <li><a href="glossary.html">Glossary</a></li>
+                <li><a href="interview_question_bank.html">Q&A Bank</a></li>
+                <li><a href="mosaic_ai.html">Mosaic AI</a></li>
+            </ul>
+        </nav>
+
+        <header class="content-header">
+            <div class="eyebrow">Chapter 9 · Money</div>
+            <h1>Cost Governance & FinOps</h1>
+            <p>The fastest way to be indispensable at a customer is to cut their bill without cutting capability. This
+                chapter turns the DBU model from Chapter 1 into an operating discipline: tagging, budgets, the
+                <code>system.billing.usage</code> tables, chargeback reporting, and the concrete levers that reduce
+                spend. Money questions decide FDE interviews.</p>
+            <div class="reading-meta"><span>⏱️ ~2 hours</span><span>🧪 1 lab</span><span>🎯 8 interview
+                    questions</span><span class="badge badge-paid" style="margin:0">System tables need a cloud
+                    workspace</span></div>
+        </header>
+
+        <div class="grid-layout">
+            <main class="main-content">
+
+                <section class="section-card anchor-offset" id="model">
+                    <span class="badge badge-free">Concept applies everywhere</span>
+                    <h2>9.1 The Cost Equation, Restated</h2>
+                    <p>Every dollar on Databricks is two components. FDEs must be able to recite this on a whiteboard:
+                    </p>
+                    <div class="diagram">TOTAL COST = DATABRICKS COST + CLOUD INFRASTRUCTURE COST
+                        (DBUs × $/DBU × hours) (VM + storage + network, billed by AWS/Azure/GCP)
+
+                        where $/DBU depends on:
+                        • workload type (Jobs &lt; DLT &lt; All-Purpose &lt; SQL, roughly)
+                        • tier (Standard / Premium / Enterprise)
+                        • compute type (Classic vs Serverless)</div>
+                    <ul>
+                        <li><strong>Two bills:</strong> customers often forget the cloud VM bill is separate from the
+                            Databricks DBU bill. Optimizing one without the other is half a solution.</li>
+                        <li><strong>Idle is the enemy:</strong> the biggest waste is compute that is provisioned but not
+                            doing useful work (interactive clusters left on, oversized always-on warehouses).</li>
+                    </ul>
+                </section>
+
+                <section class="section-card anchor-offset" id="levers">
+                    <span class="badge badge-mixed">Mix of FREE-concept and PAID-feature levers</span>
+                    <h2>9.2 The Cost-Reduction Levers (Memorize These)</h2>
+                    <div class="table-scroll">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Lever</th>
+                                    <th>Typical saving</th>
+                                    <th>How</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Move interactive → Jobs compute</td>
+                                    <td>Large</td>
+                                    <td>Jobs DBUs are far cheaper than All-Purpose; automate scheduled work.</td>
+                                </tr>
+                                <tr>
+                                    <td>Autotermination</td>
+                                    <td>Large</td>
+                                    <td>Set 10–20 min idle shutdown on every cluster/policy.</td>
+                                </tr>
+                                <tr>
+                                    <td>Autoscaling min/max</td>
+                                    <td>Medium</td>
+                                    <td>Don't pin large fixed clusters; scale with load.</td>
+                                </tr>
+                                <tr>
+                                    <td>Spot / preemptible workers</td>
+                                    <td>50–70% on VMs</td>
+                                    <td>Use spot for fault-tolerant workers, on-demand driver.</td>
+                                </tr>
+                                <tr>
+                                    <td>Photon</td>
+                                    <td>Varies (net win)</td>
+                                    <td>Higher DBU/hr but shorter runtime → lower total on CPU-heavy SQL/ETL.</td>
+                                </tr>
+                                <tr>
+                                    <td>Right-size + fix skew/spill</td>
+                                    <td>Large</td>
+                                    <td>Chapter 3 fixes cut runtime and node count together.</td>
+                                </tr>
+                                <tr>
+                                    <td>Serverless SQL auto-stop</td>
+                                    <td>Medium</td>
+                                    <td>Warehouses scale to zero between queries.</td>
+                                </tr>
+                                <tr>
+                                    <td>Trigger.AvailableNow streaming</td>
+                                    <td>Medium</td>
+                                    <td>Batch economics for incremental jobs (Ch 6).</td>
+                                </tr>
+                                <tr>
+                                    <td>File layout: OPTIMIZE + liquid clustering</td>
+                                    <td>Medium</td>
+                                    <td>Fewer files scanned = less compute + faster.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="box strategy-box">
+                        <h4>How to present this to a customer</h4>
+                        <p>Lead with the two or three biggest levers backed by their own usage data (next section),
+                            quantify the monthly saving, and show it doesn't reduce capability. That framing — "same
+                            outcomes, lower bill" — is what gets FDEs renewed.</p>
+                    </div>
+                </section>
+
+                <section class="section-card anchor-offset" id="tags">
+                    <span class="badge badge-paid">Cloud workspace required</span>
+                    <h2>9.3 Tagging Strategy (The Foundation of Chargeback)</h2>
+                    <p>You cannot allocate or optimize what you cannot attribute. Enforce <strong>custom tags</strong>
+                        on clusters, warehouses, and jobs (ideally via cluster policies / Terraform so they can't be
+                        omitted).</p>
+                    <div class="code-label">Cluster policy fragment forcing cost tags (JSON)</div>
+                    <pre><code>{
+  "custom_tags.team":        { "type": "fixed", "value": "data-platform" },
+  "custom_tags.cost_center": { "type": "allowlist", "values": ["cc-100","cc-200"] },
+  "custom_tags.env":         { "type": "fixed", "value": "prod" },
+  "autotermination_minutes": { "type": "fixed", "value": 15 }
+}</code></pre>
+                    <ul>
+                        <li><strong>team / cost_center:</strong> enables chargeback and showback.</li>
+                        <li><strong>env:</strong> separates prod vs dev spend.</li>
+                        <li><strong>pipeline / project:</strong> ties spend to a deliverable.</li>
+                    </ul>
+                </section>
+
+                <section class="section-card anchor-offset" id="systemtables">
+                    <span class="badge badge-paid">System tables require Unity Catalog</span>
+                    <h2>9.4 Querying Spend with System Tables</h2>
+                    <p>Unity Catalog exposes billing as queryable Delta tables under the <code>system</code> catalog.
+                        This is the FDE's cost microscope — join usage to pricing and to your tags.</p>
+                    <div class="code-label">SQL — top 10 spending workloads last 30 days</div>
+                    <pre><code>SELECT
+    u.usage_metadata.job_id,
+    u.custom_tags.team          AS team,
+    u.sku_name,
+    SUM(u.usage_quantity)       AS dbus,
+    SUM(u.usage_quantity * p.pricing.default) AS est_usd
+FROM system.billing.usage u
+JOIN system.billing.list_prices p
+  ON u.sku_name = p.sku_name
+ AND u.usage_unit = p.usage_unit
+WHERE u.usage_date &gt;= current_date() - INTERVAL 30 DAYS
+GROUP BY 1,2,3
+ORDER BY est_usd DESC
+LIMIT 10;</code></pre>
+                    <div class="code-label">SQL — daily spend trend by environment tag</div>
+                    <pre><code>SELECT usage_date, custom_tags.env AS env, SUM(usage_quantity) AS dbus
+FROM system.billing.usage
+WHERE usage_date &gt;= current_date() - INTERVAL 90 DAYS
+GROUP BY usage_date, env
+ORDER BY usage_date;</code></pre>
+                    <div class="box decision-box">
+                        <h4>Deliverable</h4>
+                        <p>Wrap these queries in a Databricks SQL dashboard: top spenders, spend by team/env, and
+                            week-over-week trend. That dashboard is a tangible artifact you hand the customer's platform
+                            owner.</p>
+                    </div>
+                </section>
+
+                <section class="section-card anchor-offset" id="budgets">
+                    <span class="badge badge-paid">Cloud workspace required</span>
+                    <h2>9.5 Budgets & Guardrails</h2>
+                    <ul>
+                        <li><strong>Budgets:</strong> configure account-level budget alerts to email owners when spend
+                            crosses thresholds.</li>
+                        <li><strong>Cluster policies as guardrails:</strong> cap max nodes, forbid huge instance types
+                            for non-prod, force autotermination, and restrict All-Purpose usage — prevention beats
+                            after-the-fact cleanup.</li>
+                        <li><strong>SQL warehouse limits:</strong> set max scaling and auto-stop so BI usage can't run
+                            away.</li>
+                    </ul>
+                </section>
+
+                <section class="section-card anchor-offset" id="lab">
+                    <span class="badge badge-paid">Cloud workspace required</span>
+                    <h2>9.6 Hands-On Lab — Build a Cost Dashboard</h2>
+                    <ol>
+                        <li>Confirm <code>system.billing.usage</code> and <code>system.billing.list_prices</code> are
+                            enabled (account admin).</li>
+                        <li>Run the "top 10 spenders" query; identify the single most expensive workload.</li>
+                        <li>Inspect that workload — is it All-Purpose that should be Jobs? Always-on with no
+                            autotermination? Skewed (Ch 3)?</li>
+                        <li>Apply one lever (e.g. switch to Jobs compute + 15-min autotermination via a cluster policy)
+                            and estimate the monthly saving.</li>
+                        <li>Turn the queries into a Databricks SQL dashboard with a 90-day trend and a by-team
+                            breakdown.</li>
+                    </ol>
+                </section>
+
+                <section class="section-card anchor-offset" id="qa">
+                    <h2>9.7 Interview Questions & Model Answers</h2>
+                    <details class="qa">
+                        <summary><span class="q-text">A customer's Databricks bill doubled last quarter. Walk me through
+                                your investigation.</span></summary>
+                        <div class="qa-body">
+                            <div class="tell"><strong>Testing:</strong> structured cost triage — a classic FDE scenario.
+                            </div>I'd query <code>system.billing.usage</code> joined to <code>list_prices</code> and
+                            group by workload, SKU, team, and date to find what grew. Usual culprits: interactive
+                            All-Purpose clusters left running, missing autotermination, an oversized always-on SQL
+                            warehouse, or a new skewed/spilling job burning nodes. I quantify each, apply the
+                            highest-impact lever (Jobs compute, autotermination, right-sizing, fixing skew), and stand
+                            up a dashboard so it's caught early next time.
+                        </div>
+                    </details>
+                    <details class="qa">
+                        <summary><span class="q-text">Explain the two components of Databricks cost.</span></summary>
+                        <div class="qa-body">
+                            <div class="tell"><strong>Testing:</strong> fundamental pricing literacy.</div>The
+                            Databricks charge (DBUs consumed × the per-DBU rate for that workload type/tier) plus the
+                            cloud infrastructure charge (VMs, storage, network billed directly by the cloud provider).
+                            You must optimize both; Serverless folds infra into the DBU rate.
+                        </div>
+                    </details>
+                    <details class="qa">
+                        <summary><span class="q-text">Why is Jobs compute cheaper than All-Purpose, and what's the
+                                tradeoff?</span></summary>
+                        <div class="qa-body">
+                            <div class="tell"><strong>Testing:</strong> the single biggest lever.</div>Jobs compute has
+                            a much lower per-DBU rate because clusters are ephemeral and single-purpose. The tradeoff is
+                            no interactive/shared use — you can't attach a notebook and explore. So scheduled/automated
+                            work goes on Jobs compute; interactive development on shared All-Purpose (with
+                            autotermination).
+                        </div>
+                    </details>
+                    <details class="qa">
+                        <summary><span class="q-text">How does tagging enable FinOps?</span></summary>
+                        <div class="qa-body">
+                            <div class="tell"><strong>Testing:</strong> attribution.</div>Enforced custom tags (team,
+                            cost_center, env, project) let me attribute every DBU in <code>system.billing.usage</code>
+                            to an owner, enabling chargeback/showback and pinpointing waste. I enforce them via cluster
+                            policies/Terraform so they can't be skipped.
+                        </div>
+                    </details>
+                    <details class="qa">
+                        <summary><span class="q-text">Is Photon always worth it?</span></summary>
+                        <div class="qa-body">
+                            <div class="tell"><strong>Testing:</strong> nuance.</div>Usually for CPU-heavy SQL/ETL: it
+                            costs more DBU/hr but finishes faster, lowering total cost. For light or heavily UDF/Python
+                            workloads it may not engage, so I benchmark on the actual workload rather than assume.
+                        </div>
+                    </details>
+                    <details class="qa">
+                        <summary><span class="q-text">How do you prevent cost overruns proactively?</span></summary>
+                        <div class="qa-body">
+                            <div class="tell"><strong>Testing:</strong> guardrails mindset.</div>Cluster policies (max
+                            nodes, forced autotermination, restricted instance types, forbid All-Purpose for
+                            automation), SQL warehouse auto-stop and max scaling, budget alerts, and a monitoring
+                            dashboard. Prevention via policy beats cleanup.
+                        </div>
+                    </details>
+                    <details class="qa">
+                        <summary><span class="q-text">Which system tables do you use and what governs access?</span>
+                        </summary>
+                        <div class="qa-body">
+                            <div class="tell"><strong>Testing:</strong> knowing the data source.</div>
+                            <code>system.billing.usage</code> (DBU consumption + tags),
+                            <code>system.billing.list_prices</code> (rates), and <code>system.access.audit</code> for
+                            who-did-what. They're Unity Catalog objects, so access is governed by UC permissions and
+                            must be enabled by an account admin.
+                        </div>
+                    </details>
+                    <details class="qa">
+                        <summary><span class="q-text">Customer wants lower cost but is scared of losing performance. How
+                                do you frame it?</span></summary>
+                        <div class="qa-body">
+                            <div class="tell"><strong>Testing:</strong> consulting communication.</div>I frame every
+                            lever as "same or better outcomes, lower bill," backed by their own usage data: fixing
+                            skew/spill makes jobs both faster and cheaper; autotermination only kills idle time; Jobs
+                            compute changes billing, not capability. I quantify savings and de-risk with a staged
+                            rollout on non-prod first.
+                        </div>
+                    </details>
+                </section>
+
+                <div class="page-nav">
+                    <a href="mlflow.html">
+                        <div class="dir">◀ Previous</div>
+                        <div class="pg-title">Ch 8 · MLflow</div>
+                    </a>
+                    <a class="next" href="glossary.html">
+                        <div class="dir">Next ▶</div>
+                        <div class="pg-title">Ch 10 · Glossary</div>
+                    </a>
+                </div>
+            </main>
+
+            <aside class="sidebar-panel">
+                <div class="side-card">
+                    <h3>On This Page</h3>
+                    <ul class="toc">
+                        <li><a href="#model">9.1 The Cost Equation</a></li>
+                        <li><a href="#levers">9.2 Cost Levers</a></li>
+                        <li><a href="#tags">9.3 Tagging Strategy</a></li>
+                        <li><a href="#systemtables">9.4 System Tables</a></li>
+                        <li><a href="#budgets">9.5 Budgets & Guardrails</a></li>
+                        <li><a href="#lab">9.6 Hands-On Lab</a></li>
+                        <li><a href="#qa">9.7 Interview Q&A</a></li>
+                    </ul>
+                </div>
+                <div class="side-card">
+                    <h3>The One-Liner</h3>
+                    <p><strong>Total = (DBUs × rate) + cloud VM/storage/network.</strong></p>
+                    <p>Biggest wins: <strong>Jobs compute</strong>, <strong>autotermination</strong>, <strong>fix
+                            skew/spill</strong>, <strong>spot workers</strong>.</p>
+                </div>
+            </aside>
+        </div>
+
+    </div>
+</body>
+
+</html>

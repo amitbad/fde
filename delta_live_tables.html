@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ch 5 · Delta Live Tables — Databricks FDE Mastery</title>
+    <link rel="icon" type="image/svg+xml"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect x='10' y='10' width='80' height='80' rx='15' fill='%23ff5a36'/><path d='M30 50 L45 65 L70 35' stroke='white' stroke-width='8' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>">
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <div class="container">
+
+        <nav class="navbar">
+            <div class="brand">Databricks <span>FDE</span> Mastery</div>
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="architecture_and_pricing.html">Architecture</a></li>
+                <li><a href="spark_internals.html">Spark Internals</a></li>
+                <li><a href="performance_tuning.html">Performance</a></li>
+                <li><a href="unity_catalog_and_security.html">Governance</a></li>
+                <li><a href="delta_live_tables.html" class="active">DLT</a></li>
+                <li><a href="streaming.html">Streaming</a></li>
+                <li><a href="iac_and_ci_cd.html">IaC & CI/CD</a></li>
+                <li><a href="mlflow.html">MLflow</a></li>
+                <li><a href="cost_governance.html">Cost/FinOps</a></li>
+                <li><a href="glossary.html">Glossary</a></li>
+                <li><a href="interview_question_bank.html">Q&A Bank</a></li>
+                <li><a href="mosaic_ai.html">Mosaic AI</a></li>
+            </ul>
+        </nav>
+
+        <header class="content-header">
+            <div class="eyebrow">Chapter 5 · Pipelines</div>
+            <h1>Delta Live Tables — Declarative Production Pipelines</h1>
+            <p>DLT is how FDEs ship reliable, self-healing ETL. Instead of orchestrating notebooks by hand, you declare
+                the tables you want and the quality rules they must meet; DLT manages dependencies, incremental
+                processing, retries, and observability. This chapter covers the medallion architecture, streaming tables
+                vs materialized views, expectations, and Change Data Capture with <code>APPLY CHANGES</code> (SCD 1 &
+                2).</p>
+            <div class="reading-meta"><span>⏱️ ~3 hours</span><span>🧪 1 lab</span><span>🎯 8 interview
+                    questions</span><span class="badge badge-paid" style="margin:0">Needs a cloud workspace</span></div>
+        </header>
+
+        <div class="grid-layout">
+            <main class="main-content">
+
+                <section class="section-card anchor-offset" id="why">
+                    <span class="badge badge-paid">Paid workspace required (DLT is not on Community Edition)</span>
+                    <h2>5.1 Why DLT Exists — Imperative vs Declarative</h2>
+                    <p>A hand-built pipeline is <strong>imperative</strong>: you write notebooks, wire them together in
+                        a job, manage checkpoints, handle failures, and hope the order is right. DLT is
+                        <strong>declarative</strong>: you describe each dataset as a function, and the engine derives
+                        the dependency graph, decides what to recompute, enforces quality, and gives you lineage and
+                        metrics for free.</p>
+                    <div class="table-scroll">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Concern</th>
+                                    <th>Hand-built notebooks + Jobs</th>
+                                    <th>Delta Live Tables</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Dependencies</td>
+                                    <td>You order tasks manually.</td>
+                                    <td>Inferred from table references.</td>
+                                </tr>
+                                <tr>
+                                    <td>Incremental load</td>
+                                    <td>You manage checkpoints & watermarks.</td>
+                                    <td>Streaming tables handle it.</td>
+                                </tr>
+                                <tr>
+                                    <td>Data quality</td>
+                                    <td>Custom asserts, easy to skip.</td>
+                                    <td>Declarative <code>EXPECTATIONS</code>.</td>
+                                </tr>
+                                <tr>
+                                    <td>Failure recovery</td>
+                                    <td>Manual reruns.</td>
+                                    <td>Automatic retries + idempotent recompute.</td>
+                                </tr>
+                                <tr>
+                                    <td>Lineage & metrics</td>
+                                    <td>Build it yourself.</td>
+                                    <td>Auto UI graph + event log.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <section class="section-card anchor-offset" id="medallion">
+                    <span class="badge badge-paid">Paid workspace required</span>
+                    <h2>5.2 The Medallion Architecture</h2>
+                    <p>DLT pipelines are conventionally organized in three layers. Memorize this — it is asked in almost
+                        every Databricks interview.</p>
+                    <div class="diagram"> RAW SOURCE (cloud files / Kafka)
+                        │ ingest as-is, append-only, minimal transformation
+                        ▼
+                        ┌──────────────┐ BRONZE ── raw history, schema-on-read, "source of truth"
+                        │ bronze │
+                        └──────┬───────┘
+                        │ clean, dedupe, enforce types, apply expectations
+                        ▼
+                        ┌──────────────┐ SILVER ── validated, conformed, joined business entities
+                        │ silver │
+                        └──────┬───────┘
+                        │ aggregate, model for consumption
+                        ▼
+                        ┌──────────────┐ GOLD ── business-level aggregates / BI / ML features
+                        │ gold │
+                        └──────────────┘</div>
+                    <ul>
+                        <li><strong>Bronze:</strong> land raw data with as little logic as possible so you can always
+                            replay history.</li>
+                        <li><strong>Silver:</strong> cleanse, deduplicate, enforce schema and quality, join reference
+                            data.</li>
+                        <li><strong>Gold:</strong> curated aggregates and features consumed by dashboards, reports, and
+                            ML.</li>
+                    </ul>
+                </section>
+
+                <section class="section-card anchor-offset" id="tables">
+                    <span class="badge badge-paid">Paid workspace required</span>
+                    <h2>5.3 Streaming Tables vs Materialized Views</h2>
+                    <p>DLT has two core dataset types. Choosing correctly is the crux of pipeline design.</p>
+                    <ul>
+                        <li><strong>Streaming table</strong> (<code>@dlt.table</code> reading a
+                            <code>spark.readStream</code> source): processes each input record <strong>exactly
+                                once</strong>, incrementally. Ideal for append-only ingestion (bronze) where you never
+                            want to reprocess old data.</li>
+                        <li><strong>Materialized view</strong> (batch <code>@dlt.table</code> /
+                            <code>CREATE MATERIALIZED VIEW</code>): the result is fully recomputed (or incrementally
+                            refreshed by Enzyme) whenever inputs change. Ideal for aggregations and joins (silver/gold)
+                            where correctness of the full result matters.</li>
+                    </ul>
+                    <div class="code-label">Python DLT — bronze streaming ingest with Auto Loader</div>
+                    <pre><code>import dlt
+from pyspark.sql.functions import col, current_timestamp
+
+@dlt.table(
+    name="bronze_orders",
+    comment="Raw orders ingested incrementally from cloud storage",
+    table_properties={"quality": "bronze"}
+)
+def bronze_orders():
+    return (
+        spark.readStream
+             .format("cloudFiles")                       <span class="comment"># Auto Loader</span>
+             .option("cloudFiles.format", "json")
+             .option("cloudFiles.schemaLocation", "/schemas/orders")
+             .load("/mnt/landing/orders/")
+             .withColumn("_ingested_at", current_timestamp())
+    )</code></pre>
+                    <div class="code-label">Python DLT — silver, reading the bronze streaming table</div>
+                    <pre><code>@dlt.table(name="silver_orders", comment="Cleaned, typed orders")
+def silver_orders():
+    return (
+        dlt.read_stream("bronze_orders")
+           .filter(col("order_id").isNotNull())
+           .withColumn("amount", col("amount").cast("decimal(10,2)"))
+    )</code></pre>
+                </section>
+
+                <section class="section-card anchor-offset" id="expectations">
+                    <span class="badge badge-paid">Paid workspace required</span>
+                    <h2>5.4 Data Quality with Expectations</h2>
+                    <p>Expectations are declarative row-level constraints. DLT tracks the pass/fail rate and can drop,
+                        fail, or merely warn on violations. This is the feature that gets a customer's data quality "for
+                        free".</p>
+                    <div class="table-scroll">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Decorator</th>
+                                    <th>On violation</th>
+                                    <th>Use when</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>@dlt.expect</code></td>
+                                    <td>Keep the row, record the metric (warn).</td>
+                                    <td>You want visibility but not enforcement.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>@dlt.expect_or_drop</code></td>
+                                    <td>Drop the bad row, keep the pipeline running.</td>
+                                    <td>Bad rows are noise you can discard.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>@dlt.expect_or_fail</code></td>
+                                    <td>Abort the update.</td>
+                                    <td>A violation means the data is untrustworthy.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="code-label">Combining expectations on a silver table</div>
+                    <pre><code>@dlt.table(name="silver_orders")
+@dlt.expect("valid_timestamp", "order_ts IS NOT NULL")
+@dlt.expect_or_drop("positive_amount", "amount > 0")
+@dlt.expect_or_fail("known_currency", "currency IN ('USD','EUR','GBP')")
+def silver_orders():
+    return dlt.read_stream("bronze_orders")</code></pre>
+                    <div class="box strategy-box">
+                        <h4>FDE value-add</h4>
+                        <p>Expectation metrics land in the pipeline <strong>event log</strong> (a Delta table). You can
+                            build a data-quality dashboard on top of it — showing a customer the % of records dropped
+                            per rule over time is a concrete, sellable deliverable.</p>
+                    </div>
+                </section>
+
+                <section class="section-card anchor-offset" id="cdc">
+                    <span class="badge badge-paid">Paid workspace required</span>
+                    <h2>5.5 Change Data Capture — APPLY CHANGES (SCD 1 & 2)</h2>
+                    <p>Source systems emit inserts, updates, and deletes. <code>APPLY CHANGES INTO</code> lets DLT merge
+                        a change feed into a target table and maintain <strong>Slowly Changing Dimensions</strong>
+                        without you writing MERGE logic or worrying about out-of-order events.</p>
+                    <div class="code-label">SQL DLT — SCD Type 1 (overwrite, keep latest only)</div>
+                    <pre><code>CREATE OR REFRESH STREAMING TABLE customers;
+
+APPLY CHANGES INTO live.customers
+FROM STREAM(live.bronze_customer_changes)
+KEYS (customer_id)
+APPLY AS DELETE WHEN operation = 'DELETE'
+SEQUENCE BY change_ts          <span class="comment">-- resolves out-of-order events</span>
+COLUMNS * EXCEPT (operation, change_ts)
+STORED AS SCD TYPE 1;</code></pre>
+                    <div class="code-label">SQL DLT — SCD Type 2 (keep full history with __START_AT/__END_AT)</div>
+                    <pre><code>APPLY CHANGES INTO live.customers_history
+FROM STREAM(live.bronze_customer_changes)
+KEYS (customer_id)
+SEQUENCE BY change_ts
+STORED AS SCD TYPE 2;</code></pre>
+                    <ul>
+                        <li><strong>KEYS</strong>: the primary key identifying a logical row.</li>
+                        <li><strong>SEQUENCE BY</strong>: the ordering column so late-arriving events don't overwrite
+                            newer state.</li>
+                        <li><strong>SCD Type 1</strong>: target holds only the current version. <strong>Type 2</strong>:
+                            target keeps history with validity windows.</li>
+                    </ul>
+                </section>
+
+                <section class="section-card anchor-offset" id="lab">
+                    <span class="badge badge-paid">Paid workspace required</span>
+                    <h2>5.6 Hands-On Lab — A Three-Layer Pipeline</h2>
+                    <ol>
+                        <li>Upload a few JSON files of fake orders to a cloud volume path (e.g.
+                            <code>/Volumes/main/landing/orders</code>).</li>
+                        <li>Create a notebook with the three <code>@dlt.table</code> functions above (bronze → silver →
+                            gold aggregate by region).</li>
+                        <li>Add the three expectation types to the silver table.</li>
+                        <li>Go to <strong>Workflows → Delta Live Tables → Create pipeline</strong>, point it at the
+                            notebook, choose a target Unity Catalog schema, and set the pipeline to
+                            <strong>Triggered</strong> mode.</li>
+                        <li>Run it. Open the pipeline graph — confirm the auto-inferred bronze→silver→gold DAG and click
+                            each node to see row counts and expectation pass rates.</li>
+                        <li>Drop a malformed file into the landing path and rerun; confirm the
+                            <code>expect_or_drop</code> rule quarantines the bad rows and the metric appears in the
+                            event log.</li>
+                    </ol>
+                    <div class="box decision-box">
+                        <h4>Triggered vs Continuous</h4>
+                        <p><strong>Triggered</strong> pipelines process available data then stop (cheapest, batch-like).
+                            <strong>Continuous</strong> pipelines keep clusters running for low-latency streaming (more
+                            expensive). Choose Triggered unless the customer has a real sub-minute latency SLA — a
+                            frequent cost-optimization win.</p>
+                    </div>
+                </section>
+
+                <section class="section-card anchor-offset" id="qa">
+                    <h2>5.7 Interview Questions & Model Answers</h2>
+                    <details class="qa">
+                        <summary><span class="q-text">Explain the medallion architecture and why each layer
+                                exists.</span></summary>
+                        <div class="qa-body">
+                            <div class="tell"><strong>Testing:</strong> canonical Databricks design knowledge.</div>
+                            Bronze lands raw, append-only data so history can always be replayed. Silver cleanses,
+                            types, deduplicates, enforces quality and conforms entities. Gold produces business
+                            aggregates and features for BI/ML. Separating them isolates ingestion volatility from
+                            business logic and makes reprocessing safe.
+                        </div>
+                    </details>
+                    <details class="qa">
+                        <summary><span class="q-text">Streaming table vs materialized view — when do you use
+                                each?</span></summary>
+                        <div class="qa-body">
+                            <div class="tell"><strong>Testing:</strong> the core DLT design decision.</div>Streaming
+                            tables process each source record once, incrementally — perfect for append-only ingestion
+                            (bronze/silver). Materialized views recompute/refresh the full result when inputs change —
+                            perfect for aggregations and joins where the whole answer must be correct (gold). Use
+                            streaming for ingest, MVs for aggregates.
+                        </div>
+                    </details>
+                    <details class="qa">
+                        <summary><span class="q-text">How do DLT expectations work and what are the three modes?</span>
+                        </summary>
+                        <div class="qa-body">
+                            <div class="tell"><strong>Testing:</strong> data-quality feature knowledge.</div>
+                            Expectations are declarative row constraints. <code>expect</code> warns and keeps the row,
+                            <code>expect_or_drop</code> discards violating rows, <code>expect_or_fail</code> aborts the
+                            update. Metrics for every rule are written to the event log so I can build quality
+                            dashboards.
+                        </div>
+                    </details>
+                    <details class="qa">
+                        <summary><span class="q-text">A customer has late-arriving, out-of-order CDC events. How do you
+                                keep the dimension correct?</span></summary>
+                        <div class="qa-body">
+                            <div class="tell"><strong>Testing:</strong> APPLY CHANGES understanding.</div>Use
+                            <code>APPLY CHANGES INTO ... KEYS(pk) SEQUENCE BY event_ts</code>. The SEQUENCE BY column
+                            guarantees that older events never overwrite newer state regardless of arrival order. For
+                            history I use SCD Type 2; for current-only, Type 1.
+                        </div>
+                    </details>
+                    <details class="qa">
+                        <summary><span class="q-text">Triggered vs continuous pipelines — cost implications?</span>
+                        </summary>
+                        <div class="qa-body">
+                            <div class="tell"><strong>Testing:</strong> cost awareness.</div>Triggered starts, processes
+                            available data, and shuts compute down — cheap and fine for hourly/daily SLAs. Continuous
+                            keeps clusters always on for low latency — much more expensive. I default to Triggered and
+                            only go Continuous for genuine sub-minute requirements.
+                        </div>
+                    </details>
+                    <details class="qa">
+                        <summary><span class="q-text">How does DLT know what to recompute?</span></summary>
+                        <div class="qa-body">
+                            <div class="tell"><strong>Testing:</strong> declarative model understanding.</div>DLT builds
+                            a dependency graph from the table references in your functions. Streaming tables track
+                            processed offsets via checkpoints and only handle new data; materialized views are refreshed
+                            based on input changes. You never manually order tasks.
+                        </div>
+                    </details>
+                    <details class="qa">
+                        <summary><span class="q-text">Where do DLT observability metrics live?</span></summary>
+                        <div class="qa-body">
+                            <div class="tell"><strong>Testing:</strong> operability.</div>In the pipeline event log,
+                            itself a queryable Delta table, plus the pipeline UI graph. It records row counts,
+                            expectation pass/fail rates, durations, and failures — the basis for SLAs and quality
+                            dashboards.
+                        </div>
+                    </details>
+                    <details class="qa">
+                        <summary><span class="q-text">Can you use DLT on Databricks Community Edition?</span></summary>
+                        <div class="qa-body">
+                            <div class="tell"><strong>Testing:</strong> honesty about tiering.</div>No — DLT requires a
+                            full cloud-linked workspace (Premium/Enterprise). On Community Edition I'd demonstrate the
+                            same medallion pattern with plain Structured Streaming + Delta MERGE to prove the concepts.
+                        </div>
+                    </details>
+                </section>
+
+                <div class="page-nav">
+                    <a href="unity_catalog_and_security.html">
+                        <div class="dir">◀ Previous</div>
+                        <div class="pg-title">Ch 4 · Unity Catalog & Security</div>
+                    </a>
+                    <a class="next" href="streaming.html">
+                        <div class="dir">Next ▶</div>
+                        <div class="pg-title">Ch 6 · Structured Streaming</div>
+                    </a>
+                </div>
+            </main>
+
+            <aside class="sidebar-panel">
+                <div class="side-card">
+                    <h3>On This Page</h3>
+                    <ul class="toc">
+                        <li><a href="#why">5.1 Why DLT</a></li>
+                        <li><a href="#medallion">5.2 Medallion Architecture</a></li>
+                        <li><a href="#tables">5.3 Streaming Tables vs MVs</a></li>
+                        <li><a href="#expectations">5.4 Expectations</a></li>
+                        <li><a href="#cdc">5.5 APPLY CHANGES / SCD</a></li>
+                        <li><a href="#lab">5.6 Hands-On Lab</a></li>
+                        <li><a href="#qa">5.7 Interview Q&A</a></li>
+                    </ul>
+                </div>
+                <div class="side-card">
+                    <h3>Remember</h3>
+                    <p><strong>Bronze</strong> = raw history · <strong>Silver</strong> = clean/conformed ·
+                        <strong>Gold</strong> = business aggregates.</p>
+                    <p><strong>Streaming table</strong> = process once, incremental. <strong>Materialized view</strong>
+                        = full/refreshed result.</p>
+                    <p><strong>SEQUENCE BY</strong> fixes out-of-order CDC.</p>
+                </div>
+            </aside>
+        </div>
+
+    </div>
+</body>
+
+</html>

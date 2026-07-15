@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ch 6 · Structured Streaming — Databricks FDE Mastery</title>
+    <link rel="icon" type="image/svg+xml"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect x='10' y='10' width='80' height='80' rx='15' fill='%23ff5a36'/><path d='M30 50 L45 65 L70 35' stroke='white' stroke-width='8' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>">
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <div class="container">
+
+        <nav class="navbar">
+            <div class="brand">Databricks <span>FDE</span> Mastery</div>
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="architecture_and_pricing.html">Architecture</a></li>
+                <li><a href="spark_internals.html">Spark Internals</a></li>
+                <li><a href="performance_tuning.html">Performance</a></li>
+                <li><a href="unity_catalog_and_security.html">Governance</a></li>
+                <li><a href="delta_live_tables.html">DLT</a></li>
+                <li><a href="streaming.html" class="active">Streaming</a></li>
+                <li><a href="iac_and_ci_cd.html">IaC & CI/CD</a></li>
+                <li><a href="mlflow.html">MLflow</a></li>
+                <li><a href="cost_governance.html">Cost/FinOps</a></li>
+                <li><a href="glossary.html">Glossary</a></li>
+                <li><a href="interview_question_bank.html">Q&A Bank</a></li>
+                <li><a href="mosaic_ai.html">Mosaic AI</a></li>
+            </ul>
+        </nav>
+
+        <header class="content-header">
+            <div class="eyebrow">Chapter 6 · Pipelines</div>
+            <h1>Structured Streaming — Incremental Processing Done Right</h1>
+            <p>Streaming is where correctness bugs hide: duplicates, lost data, ever-growing state, and broken recovery.
+                This chapter explains the micro-batch model, checkpoints, output modes, event-time windows and
+                watermarks, Auto Loader for file ingestion, and how to achieve exactly-once semantics — the knowledge
+                that separates an FDE from someone who copied a <code>readStream</code> snippet.</p>
+            <div class="reading-meta"><span>⏱️ ~3 hours</span><span>🧪 1 lab</span><span>🎯 9 interview
+                    questions</span><span class="badge badge-mixed" style="margin:0">Core FREE, Auto Loader PAID</span>
+            </div>
+        </header>
+
+        <div class="grid-layout">
+            <main class="main-content">
+
+                <section class="section-card anchor-offset" id="model">
+                    <span class="badge badge-free">Core streaming works on Community Edition</span>
+                    <h2>6.1 The Micro-Batch Mental Model</h2>
+                    <p>Structured Streaming treats an unbounded stream as a table that grows over time. Under the hood
+                        (default engine) it runs a series of small deterministic <strong>micro-batches</strong>: each
+                        trigger, it discovers new input, runs the same query as a batch, and commits progress.</p>
+                    <div class="diagram">source (files/Kafka) unbounded input table (conceptual)
+                        new data ─────► ┌───────────────────────────────┐
+                        │ row row row ... (append only) │
+                        └───────────────┬───────────────┘
+                        every trigger: │ incremental query
+                        ┌──────────────▼───────────────┐
+                        │ micro-batch N (a normal job) │
+                        └──────────────┬───────────────┘
+                        ▼
+                        sink (Delta table) + checkpoint (offsets + state)</code></div>
+                    <p>Because each micro-batch is an ordinary Spark job, everything from Chapter 2 (stages, shuffles,
+                        AQE) applies. The <em>only</em> new machinery is the <strong>checkpoint</strong>, which records
+                        what has been processed so the stream can recover exactly.</p>
+                </section>
+
+                <section class="section-card anchor-offset" id="checkpoint">
+                    <span class="badge badge-free">Practise on Community Edition</span>
+                    <h2>6.2 Checkpoints & Fault Tolerance</h2>
+                    <p>The checkpoint directory is the stream's durable memory. It stores <strong>source
+                            offsets</strong> (what input has been consumed) and <strong>state</strong> (for
+                        aggregations/joins). Combined with a replayable source and an idempotent sink, it delivers
+                        <strong>exactly-once</strong> end-to-end.</p>
+                    <div class="code-label">A minimal, correct streaming write</div>
+                    <pre><code>(spark.readStream
+      .format("delta").table("bronze_events")
+   .writeStream
+      .format("delta")
+      .option("checkpointLocation", "/chk/silver_events")   <span class="comment"># MANDATORY, unique per stream</span>
+      .outputMode("append")
+      .trigger(availableNow=True)                            <span class="comment"># process all, then stop</span>
+      .toTable("silver_events"))</code></pre>
+                    <div class="box warning-box">
+                        <h4>⚠️ The three cardinal checkpoint sins</h4>
+                        <ul>
+                            <li><strong>Reusing one checkpoint for two streams</strong> → corrupted offsets, silent data
+                                loss.</li>
+                            <li><strong>Deleting the checkpoint to "reset"</strong> → the stream reprocesses everything
+                                from scratch (duplicates unless the sink dedupes).</li>
+                            <li><strong>Changing the query shape</strong> (adding a stateful op) against an existing
+                                checkpoint → incompatible state, stream won't start.</li>
+                        </ul>
+                    </div>
+                </section>
+
+                <section class="section-card anchor-offset" id="outputmodes">
+                    <span class="badge badge-free">Practise on Community Edition</span>
+                    <h2>6.3 Output Modes & Triggers</h2>
+                    <div class="table-scroll">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Output mode</th>
+                                    <th>Emits</th>
+                                    <th>Valid with</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>append</code></td>
+                                    <td>Only new rows that will never change.</td>
+                                    <td>Non-aggregated streams, or aggregations bounded by a watermark.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>update</code></td>
+                                    <td>Only rows whose value changed this batch.</td>
+                                    <td>Aggregations you want incrementally updated.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>complete</code></td>
+                                    <td>The entire result table every batch.</td>
+                                    <td>Small aggregations only (state grows unbounded otherwise).</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="table-scroll">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Trigger</th>
+                                    <th>Behaviour</th>
+                                    <th>Use</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>processingTime="5 minutes"</code></td>
+                                    <td>Micro-batch every 5 min.</td>
+                                    <td>Steady near-real-time.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>availableNow=True</code></td>
+                                    <td>Process all backlog, then stop.</td>
+                                    <td>Incremental batch / cost-efficient scheduled jobs.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>Continuous</code></td>
+                                    <td>~1 ms latency, limited ops.</td>
+                                    <td>Rare, ultra-low-latency needs.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="box decision-box">
+                        <h4>FDE cost tip</h4>
+                        <p><code>Trigger.AvailableNow</code> on a scheduled job gives you streaming's exactly-once
+                            bookkeeping with batch economics — the cluster spins up, drains the backlog, and shuts down.
+                            This is the default recommendation unless a true latency SLA exists.</p>
+                    </div>
+                </section>
+
+                <section class="section-card anchor-offset" id="watermark">
+                    <span class="badge badge-free">Practise on Community Edition</span>
+                    <h2>6.4 Event Time, Windows & Watermarks</h2>
+                    <p>Real events arrive late and out of order. To aggregate by <strong>event time</strong> without
+                        keeping state forever, you declare a <strong>watermark</strong>: "I will wait up to N for late
+                        data; anything later is dropped and its window state can be released."</p>
+                    <div class="code-label">Windowed aggregation with a watermark</div>
+                    <pre><code>from pyspark.sql.functions import window, col
+
+(events
+   .withWatermark("event_ts", "10 minutes")          <span class="comment"># tolerate 10 min lateness</span>
+   .groupBy(window(col("event_ts"), "5 minutes"), col("device_id"))
+   .count()
+   .writeStream
+   .outputMode("append")                              <span class="comment"># window emitted once it closes past watermark</span>
+   .option("checkpointLocation", "/chk/win")
+   .toTable("gold_device_counts"))</code></pre>
+                    <ul>
+                        <li><strong>Without a watermark</strong>, stateful aggregation state grows forever → eventual
+                            OOM. The watermark is what lets Spark evict old state.</li>
+                        <li><strong>Tuning:</strong> a longer watermark captures more late data but holds more state
+                            (memory) and delays results. It is a correctness-vs-cost dial.</li>
+                    </ul>
+                </section>
+
+                <section class="section-card anchor-offset" id="autoloader">
+                    <span class="badge badge-paid">Auto Loader requires a cloud workspace</span>
+                    <h2>6.5 Auto Loader — Scalable File Ingestion</h2>
+                    <p>Auto Loader (<code>cloudFiles</code>) incrementally ingests new files from cloud storage without
+                        you tracking which files were seen. It scales to millions of files and handles schema inference
+                        and evolution.</p>
+                    <div class="code-label">Auto Loader with schema evolution</div>
+                    <pre><code>(spark.readStream.format("cloudFiles")
+   .option("cloudFiles.format", "json")
+   .option("cloudFiles.schemaLocation", "/schemas/orders")
+   .option("cloudFiles.schemaEvolutionMode", "addNewColumns")
+   .option("cloudFiles.inferColumnTypes", "true")
+   .load("/Volumes/main/landing/orders/")
+ .writeStream
+   .option("checkpointLocation", "/chk/orders")
+   .option("mergeSchema", "true")
+   .trigger(availableNow=True)
+   .toTable("bronze_orders"))</code></pre>
+                    <ul>
+                        <li><strong>Directory listing mode</strong> (default): lists the folder — fine for modest file
+                            counts.</li>
+                        <li><strong>File notification mode:</strong> subscribes to cloud events (SNS/SQS, Event Grid) —
+                            required for very high file volumes; needs extra cloud permissions.</li>
+                        <li><strong>Rescued data column</strong> <code>_rescued_data</code> captures fields that didn't
+                            match the schema so nothing is silently lost.</li>
+                    </ul>
+                </section>
+
+                <section class="section-card anchor-offset" id="lab">
+                    <span class="badge badge-free">Core steps FREE; step 5 needs cloud</span>
+                    <h2>6.6 Hands-On Lab — Recover a Stream Correctly</h2>
+                    <ol>
+                        <li>Create a Delta table <code>bronze_events</code> and append a few rows.</li>
+                        <li>Start a stream from it into <code>silver_events</code> with a checkpoint and
+                            <code>availableNow=True</code>. Confirm row counts match.</li>
+                        <li>Append more rows to bronze and rerun the same stream. Confirm <em>only the new rows</em> are
+                            processed (offsets advanced) — not the whole table.</li>
+                        <li>Now delete the checkpoint directory and rerun. Observe every row reprocessed → duplicates in
+                            the sink. This demonstrates why checkpoints must never be casually deleted.</li>
+                        <li>(Cloud) Recreate the ingest with Auto Loader from a volume, drop new files in, and watch
+                            incremental pickup + the <code>_rescued_data</code> column on a malformed file.</li>
+                    </ol>
+                    <div class="box strategy-box">
+                        <h4>Expected outcome</h4>
+                        <p>You will viscerally see that "the checkpoint is the stream's identity." This is the #1
+                            streaming incident FDEs are called in to fix.</p>
+                    </div>
+                </section>
+
+                <section class="section-card anchor-offset" id="qa">
+                    <h2>6.7 Interview Questions & Model Answers</h2>
+                    <details class="qa">
+                        <summary><span class="q-text">How does Structured Streaming achieve exactly-once?</span>
+                        </summary>
+                        <div class="qa-body">
+                            <div class="tell"><strong>Testing:</strong> the central guarantee.</div>Three ingredients: a
+                            replayable source (offsets), a checkpoint that atomically records processed offsets and
+                            state, and an idempotent/transactional sink (Delta commits are atomic and keyed to batch
+                            id). On failure the stream replays from the last committed offset and the sink de-duplicates
+                            by batch id, so each record affects the result once.
+                        </div>
+                    </details>
+                    <details class="qa">
+                        <summary><span class="q-text">What exactly is stored in a checkpoint?</span></summary>
+                        <div class="qa-body">
+                            <div class="tell"><strong>Testing:</strong> recovery internals.</div>Source offsets (the
+                            progress log), commit log, and operator state for stateful queries (aggregations, joins,
+                            dedup). It's what allows recovery without reprocessing and why it must be unique per stream
+                            and preserved across restarts.
+                        </div>
+                    </details>
+                    <details class="qa">
+                        <summary><span class="q-text">Explain watermarks. What breaks without one?</span></summary>
+                        <div class="qa-body">
+                            <div class="tell"><strong>Testing:</strong> event-time correctness.</div>A watermark
+                            declares the max lateness tolerated for event-time aggregations, letting Spark finalize and
+                            evict old window state. Without it, stateful aggregation state grows unbounded and
+                            eventually OOMs, and append mode can't decide when a window is final.
+                        </div>
+                    </details>
+                    <details class="qa">
+                        <summary><span class="q-text">append vs update vs complete output mode?</span></summary>
+                        <div class="qa-body">
+                            <div class="tell"><strong>Testing:</strong> API correctness.</div>Append emits only
+                            finalized new rows (needs a watermark for aggregations). Update emits changed aggregate rows
+                            each batch. Complete re-emits the whole result table — only safe for small aggregates
+                            because state is unbounded.
+                        </div>
+                    </details>
+                    <details class="qa">
+                        <summary><span class="q-text">Trigger.AvailableNow vs processingTime — why does it matter for
+                                cost?</span></summary>
+                        <div class="qa-body">
+                            <div class="tell"><strong>Testing:</strong> FinOps thinking.</div>AvailableNow drains the
+                            backlog then stops, so a scheduled job gets exactly-once bookkeeping with batch economics
+                            (compute shuts down). processingTime keeps micro-batching on an interval, holding compute. I
+                            default to AvailableNow unless there's a genuine latency SLA.
+                        </div>
+                    </details>
+                    <details class="qa">
+                        <summary><span class="q-text">What is Auto Loader and when do you use file notification
+                                mode?</span></summary>
+                        <div class="qa-body">
+                            <div class="tell"><strong>Testing:</strong> ingestion at scale.</div>Auto Loader
+                            incrementally ingests new cloud files with schema inference/evolution and its own
+                            file-tracking. Directory listing is fine for modest volumes; file notification mode (cloud
+                            event queues) is needed at very high file counts to avoid expensive listings, at the cost of
+                            extra cloud IAM setup.
+                        </div>
+                    </details>
+                    <details class="qa">
+                        <summary><span class="q-text">A customer deleted a checkpoint to "restart clean" and now has
+                                duplicates. What happened and how do you prevent it?</span></summary>
+                        <div class="qa-body">
+                            <div class="tell"><strong>Testing:</strong> incident response.</div>Deleting the checkpoint
+                            erased the offset log, so the stream re-read the whole source and re-wrote rows.
+                            Prevention/fix: never delete checkpoints; if a reset is required, also truncate/rebuild the
+                            sink, or dedupe by a natural key + MERGE. Going forward, use idempotent sinks and document
+                            checkpoint locations as protected.
+                        </div>
+                    </details>
+                    <details class="qa">
+                        <summary><span class="q-text">How do you handle a stream whose state keeps growing?</span>
+                        </summary>
+                        <div class="qa-body">
+                            <div class="tell"><strong>Testing:</strong> stateful ops hygiene.</div>Add/shorten a
+                            watermark so old state is evicted, ensure stream-stream joins have time constraints, use
+                            RocksDB state store for large state, and prefer append with bounded windows over complete
+                            mode.
+                        </div>
+                    </details>
+                    <details class="qa">
+                        <summary><span class="q-text">Can you run Structured Streaming on Community Edition?</span>
+                        </summary>
+                        <div class="qa-body">
+                            <div class="tell"><strong>Testing:</strong> tier honesty.</div>Yes for core Delta-to-Delta
+                            streaming and rate sources — great for learning checkpoints and watermarks. Auto Loader and
+                            file-notification ingestion need a cloud-linked workspace.
+                        </div>
+                    </details>
+                </section>
+
+                <div class="page-nav">
+                    <a href="delta_live_tables.html">
+                        <div class="dir">◀ Previous</div>
+                        <div class="pg-title">Ch 5 · Delta Live Tables</div>
+                    </a>
+                    <a class="next" href="iac_and_ci_cd.html">
+                        <div class="dir">Next ▶</div>
+                        <div class="pg-title">Ch 7 · IaC & CI/CD</div>
+                    </a>
+                </div>
+            </main>
+
+            <aside class="sidebar-panel">
+                <div class="side-card">
+                    <h3>On This Page</h3>
+                    <ul class="toc">
+                        <li><a href="#model">6.1 Micro-Batch Model</a></li>
+                        <li><a href="#checkpoint">6.2 Checkpoints</a></li>
+                        <li><a href="#outputmodes">6.3 Output Modes & Triggers</a></li>
+                        <li><a href="#watermark">6.4 Watermarks</a></li>
+                        <li><a href="#autoloader">6.5 Auto Loader</a></li>
+                        <li><a href="#lab">6.6 Hands-On Lab</a></li>
+                        <li><a href="#qa">6.7 Interview Q&A</a></li>
+                    </ul>
+                </div>
+                <div class="side-card">
+                    <h3>Exactly-Once = 3 Things</h3>
+                    <p>1. Replayable <strong>source</strong> (offsets)</p>
+                    <p>2. Durable <strong>checkpoint</strong> (offsets + state)</p>
+                    <p>3. Idempotent/transactional <strong>sink</strong> (Delta)</p>
+                </div>
+            </aside>
+        </div>
+
+    </div>
+</body>
+
+</html>
