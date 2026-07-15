@@ -469,11 +469,12 @@
                     <div class="decision-box">
                         <h4>💡 Architecture Decision Pattern</h4>
                         <p>
-                            Choose <strong>Classic Classic</strong> when highly strict corporate compliance mandates
-                            that compute Virtual Machines *must* exist within customer-owned subnets. Choose
-                            <strong>Serverless</strong> for SQL Warehouses and Serverless Sprints to bypass cluster
-                            startup lag, eliminate idle instance costs, and let Databricks manage security patches
-                            automatically.
+                            Choose <strong>Classic Compute</strong> when corporate security, compliance, or networking
+                            requirements mandate that compute resources run within your own AWS account, Azure
+                            subscription, or GCP project (for example, inside customer-managed VPCs/VNets).<br>
+                            Choose <strong>Serverless Compute</strong> for SQL Warehouses, notebooks, and jobs when you
+                            want faster startup times, automatic scaling, reduced operational overhead, and
+                            Databricks-managed infrastructure, including patching and lifecycle management.
                         </p>
                     </div>
                 </section>
