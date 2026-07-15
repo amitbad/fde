@@ -606,6 +606,67 @@ tbody tr:hover td {
     color: #1e3a8a;
 }
 
+.cost-scenario {
+    border: 1px solid var(--color-border-light);
+    border-radius: var(--border-radius-sm);
+    margin-bottom: 1rem;
+    background: #ffffff;
+    overflow: hidden;
+}
+
+.cost-scenario summary {
+    cursor: pointer;
+    padding: 1rem 1.25rem;
+    font-weight: 800;
+    color: var(--color-brand-secondary);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    list-style: none;
+}
+
+.cost-scenario summary::-webkit-details-marker {
+    display: none;
+}
+
+.cost-scenario summary::before {
+    content: "$";
+    background: var(--color-accent-green);
+    color: #ffffff;
+    border-radius: 999px;
+    width: 1.65rem;
+    height: 1.65rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    flex-shrink: 0;
+}
+
+.cost-scenario summary::after {
+    content: "+";
+    margin-left: auto;
+    font-size: 1.3rem;
+    color: var(--color-text-muted);
+}
+
+.cost-scenario[open] summary {
+    border-bottom: 1px solid var(--color-border-light);
+    background: #f8fafc;
+}
+
+.cost-scenario[open] summary::after {
+    content: "\2212";
+}
+
+.cost-scenario-body {
+    padding: 1.25rem;
+}
+
+.cost-scenario-body .diagram {
+    margin-top: 0.75rem;
+}
+
 /* ---------------- Diagram Block ---------------- */
 .diagram {
     background: #0f172a;

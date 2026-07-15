@@ -27,9 +27,9 @@
                 <li><a href="mlflow.html">MLflow</a></li>
                 <li><a href="cost_governance.html" class="active">Cost/FinOps</a></li>
                 <li><a href="glossary.html">Glossary</a></li>
-                <li><a href="interview_question_bank.html">Q&A Bank</a></li>
                 <li><a href="mosaic_ai.html">Mosaic AI</a></li>
                 <li><a href="case_studies.html">Case Studies</a></li>
+                <li><a href="interview_question_bank.html">Q&A Bank</a></li>
             </ul>
         </nav>
 
@@ -41,7 +41,7 @@
                 <code>system.billing.usage</code> tables, chargeback reporting, and the concrete levers that reduce
                 spend. Money questions decide FDE interviews.
             </p>
-            <div class="reading-meta"><span>⏱️ ~2 hours</span><span>🧪 1 lab</span><span>🎯 8 interview
+            <div class="reading-meta"><span>⏱️ ~3.5–4 hours</span><span>🧪 1 lab</span><span>🎯 8 interview
                     questions</span><span class="badge badge-paid" style="margin:0">System tables need a cloud
                     workspace</span></div>
         </header>
@@ -206,9 +206,242 @@ ORDER BY usage_date;</code></pre>
                     </ul>
                 </section>
 
+                <section class="section-card anchor-offset" id="scenarios">
+                    <span class="badge badge-free">Interview-grade cost math</span>
+                    <h2>9.6 Scenario-Based Cost Calculations</h2>
+                    <p>Use these as practice drills. The numbers are intentionally illustrative; in a real customer
+                        account, pull DBU rates from <code>system.billing.list_prices</code> and cloud infrastructure
+                        rates from AWS, Azure, or GCP billing exports. What matters in interviews is the structure:
+                        baseline, proposed change, monthly math, risk, and recommendation.</p>
+
+                    <div class="box gotcha-box">
+                        <h4>Base assumptions for the examples</h4>
+                        <p>The example rates below are simplified placeholders so the arithmetic is easy to follow. Do
+                            not quote them as Databricks list prices.</p>
+                        <div class="table-scroll">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Symbol</th>
+                                        <th>Meaning</th>
+                                        <th>Example value</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><code>AP_DBU</code></td>
+                                        <td>All-Purpose DBU rate</td>
+                                        <td>$0.55 / DBU-hour</td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>JOB_DBU</code></td>
+                                        <td>Jobs compute DBU rate</td>
+                                        <td>$0.25 / DBU-hour</td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>SQL_DBU</code></td>
+                                        <td>SQL warehouse DBU rate</td>
+                                        <td>$0.40 / DBU-hour</td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>VM_HR</code></td>
+                                        <td>Cloud VM cost per worker</td>
+                                        <td>$0.35 / worker-hour</td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>DAYS</code></td>
+                                        <td>Monthly modeling window</td>
+                                        <td>30 days</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <details class="cost-scenario">
+                        <summary>Scenario 1 — All-Purpose cluster left running overnight</summary>
+                        <div class="cost-scenario-body">
+                            <p><strong>Customer situation:</strong> a team runs notebooks for 2 hours/day but leaves an
+                                8-worker All-Purpose cluster running 24×7. Each hour consumes 16 DBUs and 8
+                                worker-hours.
+                            </p>
+                            <div class="diagram">Current monthly cost
+                                = 16 DBU/hr × $0.55 × 24 hr/day × 30 days
+                                + 8 workers × $0.35 × 24 hr/day × 30 days
+                                = $6,336 DBU + $2,016 cloud
+                                = $8,352/month
+
+                                Useful-work cost only
+                                = 16 DBU/hr × $0.55 × 2 hr/day × 30 days
+                                + 8 workers × $0.35 × 2 hr/day × 30 days
+                                = $528 DBU + $168 cloud
+                                = $696/month
+
+                                Waste from idle time
+                                = $8,352 - $696 = $7,656/month</div>
+                            <p><strong>FDE recommendation:</strong> enforce 15-minute autotermination through cluster
+                                policy, separate development clusters from production jobs, and alert on all-purpose
+                                clusters running outside business hours.</p>
+                        </div>
+                    </details>
+
+                    <details class="cost-scenario">
+                        <summary>Scenario 2 — Move a scheduled notebook from All-Purpose to Jobs compute</summary>
+                        <div class="cost-scenario-body">
+                            <p><strong>Customer situation:</strong> a nightly ETL notebook runs 3 hours/day on an
+                                interactive cluster because it was originally built manually. It consumes 20 DBUs/hour
+                                and 10 worker-hours/hour.</p>
+                            <div class="diagram">Current All-Purpose cost
+                                = 20 DBU/hr × $0.55 × 3 hr/day × 30 days
+                                + 10 worker-hr/hr × $0.35 × 3 hr/day × 30 days
+                                = $990 DBU + $315 cloud
+                                = $1,305/month
+
+                                Jobs compute cost
+                                = 20 DBU/hr × $0.25 × 3 hr/day × 30 days
+                                + 10 worker-hr/hr × $0.35 × 3 hr/day × 30 days
+                                = $450 DBU + $315 cloud
+                                = $765/month
+
+                                Monthly saving
+                                = $1,305 - $765 = $540/month</div>
+                            <p><strong>FDE recommendation:</strong> convert the notebook to a scheduled Job, attach a
+                                job cluster, keep dev notebooks on All-Purpose, and add owner/team tags for chargeback.
+                            </p>
+                        </div>
+                    </details>
+
+                    <details class="cost-scenario">
+                        <summary>Scenario 3 — Photon costs more per hour but finishes faster</summary>
+                        <div class="cost-scenario-body">
+                            <p><strong>Customer situation:</strong> a SQL-heavy transformation takes 4 hours without
+                                Photon. Photon increases DBU consumption by 20%, but runtime drops to 1.5 hours on the
+                                same worker shape.</p>
+                            <div class="diagram">Without Photon
+                                = 30 DBU/hr × $0.25 × 4 hr/run × 30 runs
+                                + 12 worker-hr/hr × $0.35 × 4 hr/run × 30 runs
+                                = $900 DBU + $504 cloud
+                                = $1,404/month
+
+                                With Photon
+                                = 36 DBU/hr × $0.25 × 1.5 hr/run × 30 runs
+                                + 12 worker-hr/hr × $0.35 × 1.5 hr/run × 30 runs
+                                = $405 DBU + $189 cloud
+                                = $594/month
+
+                                Monthly saving
+                                = $1,404 - $594 = $810/month</div>
+                            <p><strong>FDE recommendation:</strong> do not judge by DBU/hour alone. Judge by total
+                                cost per completed run and validate that Photon actually accelerates the operators in
+                                the query profile.</p>
+                        </div>
+                    </details>
+
+                    <details class="cost-scenario">
+                        <summary>Scenario 4 — SQL warehouse auto-stop and right-sizing</summary>
+                        <div class="cost-scenario-body">
+                            <p><strong>Customer situation:</strong> a BI warehouse is sized Large at 24 DBUs/hour and is
+                                left on all day. Actual dashboard usage is 4 hours/day, mostly morning and evening.</p>
+                            <div class="diagram">Always-on warehouse
+                                = 24 DBU/hr × $0.40 × 24 hr/day × 30 days
+                                = $6,912/month
+
+                                Auto-stop after idle, active only 4 hr/day
+                                = 24 DBU/hr × $0.40 × 4 hr/day × 30 days
+                                = $1,152/month
+
+                                If right-sized to Medium at 12 DBU/hr
+                                = 12 DBU/hr × $0.40 × 4 hr/day × 30 days
+                                = $576/month
+
+                                Total saving from always-on Large to auto-stopped Medium
+                                = $6,912 - $576 = $6,336/month</div>
+                            <p><strong>FDE recommendation:</strong> inspect query concurrency and latency before
+                                downsizing. If user experience stays acceptable, set auto-stop, max clusters, and a
+                                warehouse size policy.</p>
+                        </div>
+                    </details>
+
+                    <details class="cost-scenario">
+                        <summary>Scenario 5 — Continuous streaming vs Trigger.AvailableNow</summary>
+                        <div class="cost-scenario-body">
+                            <p><strong>Customer situation:</strong> a file ingestion stream runs 24×7 even though source
+                                files arrive once every hour. The business SLA is hourly, not sub-minute.</p>
+                            <div class="diagram">Continuous cluster
+                                = 10 DBU/hr × $0.25 × 24 hr/day × 30 days
+                                + 5 workers × $0.35 × 24 hr/day × 30 days
+                                = $1,800 DBU + $1,260 cloud
+                                = $3,060/month
+
+                                Trigger.AvailableNow every hour, 10 minutes active per run
+                                Active hours/day = 24 runs × 10 min / 60 = 4 hr/day
+                                = 10 DBU/hr × $0.25 × 4 hr/day × 30 days
+                                + 5 workers × $0.35 × 4 hr/day × 30 days
+                                = $300 DBU + $210 cloud
+                                = $510/month
+
+                                Monthly saving
+                                = $3,060 - $510 = $2,550/month</div>
+                            <p><strong>FDE recommendation:</strong> match trigger mode to SLA. Continuous is justified
+                                for low-latency events; hourly file ingestion usually deserves AvailableNow or scheduled
+                                incremental batch.</p>
+                        </div>
+                    </details>
+
+                    <details class="cost-scenario">
+                        <summary>Scenario 6 — Spot workers for fault-tolerant jobs</summary>
+                        <div class="cost-scenario-body">
+                            <p><strong>Customer situation:</strong> a backfill job uses 20 workers for 6 hours. It is
+                                retry-safe and can tolerate worker interruption. Spot workers are 60% cheaper than
+                                on-demand workers in this simplified model.</p>
+                            <div class="diagram">All on-demand cloud cost
+                                = 20 workers × $0.35 × 6 hr = $42/run
+
+                                Mixed fleet: 1 on-demand driver + 19 spot workers
+                                = 1 × $0.35 × 6 hr + 19 × ($0.35 × 40%) × 6 hr
+                                = $2.10 + $15.96
+                                = $18.06/run
+
+                                Cloud saving per run
+                                = $42 - $18.06 = $23.94/run
+
+                                If 20 runs/month
+                                = $478.80/month cloud saving</div>
+                            <p><strong>FDE recommendation:</strong> use on-demand drivers and spot/preemptible workers
+                                for retry-safe batch workloads. Avoid spot for fragile streaming jobs, stateful
+                                services,
+                                or workloads with strict completion windows unless retry behavior is proven.</p>
+                        </div>
+                    </details>
+
+                    <details class="cost-scenario">
+                        <summary>Scenario 7 — Serverless vs Classic: operational cost tradeoff</summary>
+                        <div class="cost-scenario-body">
+                            <p><strong>Customer situation:</strong> analysts run short ad-hoc SQL bursts throughout the
+                                day. Classic compute has lower apparent DBU rate, but startup delay and idle windows
+                                cause
+                                over-provisioning.</p>
+                            <div class="diagram">Classic warehouse model
+                                = 16 DBU/hr × $0.40 × 8 active/idle hr/day × 30 days
+                                = $1,536/month
+
+                                Serverless model with higher effective rate but 3 active hr/day
+                                = 16 DBU/hr × $0.65 × 3 active hr/day × 30 days
+                                = $936/month
+
+                                Monthly saving
+                                = $1,536 - $936 = $600/month</div>
+                            <p><strong>FDE recommendation:</strong> serverless can win even with a higher unit rate when
+                                usage is bursty and idle time disappears. Classic can still be better for strict private
+                                networking, custom libraries, predictable long-running workloads, or specific compliance
+                                requirements.</p>
+                        </div>
+                    </details>
+                </section>
+
                 <section class="section-card anchor-offset" id="lab">
                     <span class="badge badge-paid">Cloud workspace required</span>
-                    <h2>9.6 Hands-On Lab — Build a Cost Dashboard</h2>
+                    <h2>9.7 Hands-On Lab — Build a Cost Dashboard</h2>
                     <ol>
                         <li>Confirm <code>system.billing.usage</code> and <code>system.billing.list_prices</code> are
                             enabled (account admin).</li>
@@ -223,7 +456,7 @@ ORDER BY usage_date;</code></pre>
                 </section>
 
                 <section class="section-card anchor-offset" id="qa">
-                    <h2>9.7 Interview Questions & Model Answers</h2>
+                    <h2>9.8 Interview Questions & Model Answers</h2>
                     <details class="qa">
                         <summary><span class="q-text">A customer's Databricks bill doubled last quarter. Walk me through
                                 your investigation.</span></summary>
@@ -328,8 +561,9 @@ ORDER BY usage_date;</code></pre>
                         <li><a href="#tags">9.3 Tagging Strategy</a></li>
                         <li><a href="#systemtables">9.4 System Tables</a></li>
                         <li><a href="#budgets">9.5 Budgets & Guardrails</a></li>
-                        <li><a href="#lab">9.6 Hands-On Lab</a></li>
-                        <li><a href="#qa">9.7 Interview Q&A</a></li>
+                        <li><a href="#scenarios">9.6 Cost Scenarios</a></li>
+                        <li><a href="#lab">9.7 Hands-On Lab</a></li>
+                        <li><a href="#qa">9.8 Interview Q&A</a></li>
                     </ul>
                 </div>
                 <div class="side-card">

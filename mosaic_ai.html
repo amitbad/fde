@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ch 12 · Mosaic AI & Databricks Intelligence — FDE Mastery</title>
+    <title>Ch 11 · Mosaic AI & Databricks Intelligence — FDE Mastery</title>
     <link rel="icon" type="image/svg+xml"
         href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect x='10' y='10' width='80' height='80' rx='15' fill='%23ff5a36'/><path d='M30 50 L45 65 L70 35' stroke='white' stroke-width='8' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>">
     <link rel="stylesheet" href="styles.css">
@@ -27,14 +27,14 @@
                 <li><a href="mlflow.html">MLflow</a></li>
                 <li><a href="cost_governance.html">Cost/FinOps</a></li>
                 <li><a href="glossary.html">Glossary</a></li>
-                <li><a href="interview_question_bank.html">Q&A Bank</a></li>
                 <li><a href="mosaic_ai.html" class="active">Mosaic AI</a></li>
                 <li><a href="case_studies.html">Case Studies</a></li>
+                <li><a href="interview_question_bank.html">Q&A Bank</a></li>
             </ul>
         </nav>
 
         <header class="content-header">
-            <div class="eyebrow">Chapter 12 · Intelligence Platform</div>
+            <div class="eyebrow">Chapter 11 · Intelligence Platform</div>
             <h1>Mosaic AI & the Databricks Intelligence Platform</h1>
             <p>Databricks' 2025–2026 strategic pivot: every data platform is becoming an AI platform. FDEs must wire up
                 Vector Search, Foundation Model APIs, Genie, and Lakehouse Monitoring — not just pipelines.</p>
@@ -48,7 +48,7 @@
                 <!-- 12.1 Mosaic AI Overview -->
                 <section class="section-card anchor-offset" id="overview">
                     <span class="badge badge-mixed">Conceptual FREE · Features PAID</span>
-                    <h2>12.1 Mosaic AI — The Umbrella</h2>
+                    <h2>11.1 Mosaic AI — The Umbrella</h2>
                     <p>Mosaic AI is Databricks' unified AI layer that sits on top of the Lakehouse. It is not a single
                         product — it is the brand for a set of capabilities that covers the full AI lifecycle from raw
                         data to a deployed, governed, production AI application.</p>
@@ -112,7 +112,7 @@
                 <!-- 12.2 Foundation Model APIs -->
                 <section class="section-card anchor-offset" id="fmapi">
                     <span class="badge badge-paid">Requires pay-per-token or provisioned throughput workspace</span>
-                    <h2>12.2 Foundation Model APIs</h2>
+                    <h2>11.2 Foundation Model APIs</h2>
                     <p>Foundation Model APIs (FMAPI) let you call curated open-source models (DBRX Instruct, Llama 3,
                         Mistral, BGE-Large-EN for embeddings) and route to external providers (OpenAI, Anthropic, Azure
                         OAI) — all through a single, governance-wrapped SDK endpoint tracked in Unity Catalog.</p>
@@ -176,7 +176,7 @@ POST /api/2.0/serving-endpoints
                 <!-- 12.3 Vector Search -->
                 <section class="section-card anchor-offset" id="vectorsearch">
                     <span class="badge badge-paid">Vector indexes require a cloud workspace</span>
-                    <h2>12.3 Vector Search — Managed Embeddings for RAG</h2>
+                    <h2>11.3 Vector Search — Managed Embeddings for RAG</h2>
                     <p>Databricks Vector Search is a serverless vector database that syncs automatically from a Delta
                         table. It eliminates the need to manage Pinecone, Weaviate, or FAISS externally — the index
                         lives in your Lakehouse and is governed by Unity Catalog.</p>
@@ -249,7 +249,7 @@ results = idx.similarity_search(
                 <!-- 12.4 AI/BI Genie -->
                 <section class="section-card anchor-offset" id="genie">
                     <span class="badge badge-paid">Genie requires Unity Catalog + SQL Warehouse</span>
-                    <h2>12.4 AI/BI Genie — Natural Language BI</h2>
+                    <h2>11.4 AI/BI Genie — Natural Language BI</h2>
                     <p>Genie is Databricks' conversational BI layer. Users ask questions in plain English ("Show me top
                         10 customers by revenue last quarter") and Genie generates SQL, runs it against UC-governed
                         tables, and returns a chart or table — no SQL knowledge required.</p>
@@ -291,7 +291,7 @@ This is an e-commerce sales database. All revenue figures are in USD.
                 <!-- 12.5 Lakehouse Monitoring -->
                 <section class="section-card anchor-offset" id="monitoring">
                     <span class="badge badge-paid">Lakehouse Monitoring is a paid feature</span>
-                    <h2>12.5 Lakehouse Monitoring — Data Quality & Drift at Scale</h2>
+                    <h2>11.5 Lakehouse Monitoring — Data Quality & Drift at Scale</h2>
                     <p>Lakehouse Monitoring attaches a statistical monitor to any Delta table in UC. It automatically
                         produces two analysis tables — <code>profile_metrics</code> and <code>drift_metrics</code> —
                         that you can query, dashboard, or alert on. No custom DQ pipeline to maintain.</p>
@@ -344,7 +344,7 @@ spark.sql("""
                 <!-- 12.6 Databricks Apps -->
                 <section class="section-card anchor-offset" id="apps">
                     <span class="badge badge-paid">Apps is a paid feature (GA 2025)</span>
-                    <h2>12.6 Databricks Apps — Host AI Tools Natively</h2>
+                    <h2>11.6 Databricks Apps — Host AI Tools Natively</h2>
                     <p>Databricks Apps lets you deploy Streamlit, Gradio, Dash, or any Python web framework directly
                         inside a Databricks workspace — no external cloud infra, no networking config. The app inherits
                         the user's UC identity and can query Databricks SQL Warehouses directly.</p>
@@ -409,7 +409,7 @@ resources:
                 <!-- 12.7 Predictive Optimization & Lakehouse Federation (Bonus) -->
                 <section class="section-card anchor-offset" id="advanced">
                     <span class="badge badge-paid">Both require Unity Catalog + Premium/Enterprise</span>
-                    <h2>12.7 Predictive Optimization & Lakehouse Federation</h2>
+                    <h2>11.7 Predictive Optimization & Lakehouse Federation</h2>
 
                     <h3>Predictive Optimization</h3>
                     <p>Predictive Optimization automatically runs <code>OPTIMIZE</code> and <code>VACUUM</code> on
@@ -466,11 +466,12 @@ SELECT * FROM pg_catalog.public.customers LIMIT 100;</code></pre>
                 <!-- 12.8 Lab -->
                 <section class="section-card anchor-offset" id="lab">
                     <span class="badge badge-paid">Requires cloud workspace with Mosaic AI enabled</span>
-                    <h2>12.8 Hands-On Lab — Build a Minimal RAG App</h2>
+                    <h2>11.8 Hands-On Lab — Build a Minimal RAG App</h2>
                     <ol>
                         <li>Create a Delta table in UC with 20+ text documents (use any public wiki text).</li>
                         <li>Create a Vector Search endpoint and a Delta Sync index on that table using
-                            <code>databricks-bge-large-en</code> embeddings.</li>
+                            <code>databricks-bge-large-en</code> embeddings.
+                        </li>
                         <li>Trigger a sync and verify <code>num_vectors</code> > 0 in the index status.</li>
                         <li>Write a Python cell that calls <code>similarity_search()</code> and prints the top-3 chunks
                             for a test question.</li>
@@ -479,13 +480,14 @@ SELECT * FROM pg_catalog.public.customers LIMIT 100;</code></pre>
                         <li>(Bonus) Wrap steps 4–5 in a Streamlit <code>app.py</code> and deploy with Databricks Apps.
                         </li>
                         <li>(Bonus) Attach a Lakehouse Monitor to the Delta source table and inspect the generated
-                            <code>profile_metrics</code> table after the first run.</li>
+                            <code>profile_metrics</code> table after the first run.
+                        </li>
                     </ol>
                 </section>
 
                 <!-- 12.9 Interview Q&A -->
                 <section class="section-card anchor-offset" id="qa">
-                    <h2>12.9 Interview Questions & Model Answers</h2>
+                    <h2>11.9 Interview Questions & Model Answers</h2>
 
                     <details class="qa">
                         <summary><span class="q-text">What is Mosaic AI and why should an FDE care about it?</span>
@@ -621,13 +623,13 @@ SELECT * FROM pg_catalog.public.customers LIMIT 100;</code></pre>
                 </section>
 
                 <div class="page-nav">
-                    <a href="interview_question_bank.html">
+                    <a href="glossary.html">
                         <div class="dir">◀ Previous</div>
-                        <div class="pg-title">Ch 11 · Interview Question Bank</div>
+                        <div class="pg-title">Ch 10 · Glossary</div>
                     </a>
                     <a class="next" href="case_studies.html">
                         <div class="dir">Next ▶</div>
-                        <div class="pg-title">Ch 13 · Case Studies</div>
+                        <div class="pg-title">Ch 12 · Case Studies</div>
                     </a>
                 </div>
             </main>
@@ -636,15 +638,15 @@ SELECT * FROM pg_catalog.public.customers LIMIT 100;</code></pre>
                 <div class="side-card">
                     <h3>On This Page</h3>
                     <ul class="toc">
-                        <li><a href="#overview">12.1 Mosaic AI Overview</a></li>
-                        <li><a href="#fmapi">12.2 Foundation Model APIs</a></li>
-                        <li><a href="#vectorsearch">12.3 Vector Search</a></li>
-                        <li><a href="#genie">12.4 AI/BI Genie</a></li>
-                        <li><a href="#monitoring">12.5 Lakehouse Monitoring</a></li>
-                        <li><a href="#apps">12.6 Databricks Apps</a></li>
-                        <li><a href="#advanced">12.7 Predictive Opt. & Federation</a></li>
-                        <li><a href="#lab">12.8 Hands-On Lab</a></li>
-                        <li><a href="#qa">12.9 Interview Q&A</a></li>
+                        <li><a href="#overview">11.1 Mosaic AI Overview</a></li>
+                        <li><a href="#fmapi">11.2 Foundation Model APIs</a></li>
+                        <li><a href="#vectorsearch">11.3 Vector Search</a></li>
+                        <li><a href="#genie">11.4 AI/BI Genie</a></li>
+                        <li><a href="#monitoring">11.5 Lakehouse Monitoring</a></li>
+                        <li><a href="#apps">11.6 Databricks Apps</a></li>
+                        <li><a href="#advanced">11.7 Predictive Opt. & Federation</a></li>
+                        <li><a href="#lab">11.8 Hands-On Lab</a></li>
+                        <li><a href="#qa">11.9 Interview Q&A</a></li>
                     </ul>
                 </div>
                 <div class="side-card">
