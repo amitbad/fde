@@ -514,28 +514,31 @@
                     <span class="badge badge-paid">Paid Cloud Subscription Required</span>
                     <h2>3. Cloud Network Topology & Security</h2>
                     <p>
-                        Securing the flow of data between the Control Plane, customer VPC, and cloud storage (e.g.,
-                        S3/ADLS) is critical for enterprise security audits.
+                        Securing traffic between users, Databricks-managed services, compute resources, and cloud
+                        storage (for example S3, ADLS, or GCS) is critical for enterprise security reviews.
                     </p>
 
                     <h3>Private Link / Private Endpoints</h3>
                     <p>
-                        By default, communications between planes occur over secure public cloud networks. FDEs
-                        implement **Private Link** (AWS) or **Private Endpoints** (Azure) to route traffic entirely over
-                        secure private cloud backbones, bypassing the public internet:
+                        By default, many connections are secured with TLS over cloud-provider public endpoints. FDEs use
+                        <strong>Private Link</strong> / <strong>Private Endpoints</strong> on supported deployments when
+                        a
+                        customer requires private network paths instead of public internet exposure:
                     </p>
                     <ul>
-                        <li><strong>Front-End Connection:</strong> Restricts workspace UI access to corporate networks
-                            or VPNs.</li>
-                        <li><strong>Back-End Connection:</strong> Securely links the Databricks Control Plane to the
-                            Data Plane VPC without exposing public routing IPs.</li>
+                        <li><strong>Front-End private access:</strong> Restricts workspace UI and API access to approved
+                            corporate networks, VPNs, or private DNS paths.</li>
+                        <li><strong>Back-End private connectivity:</strong> Keeps supported control-plane to compute /
+                            storage communication on private cloud networking instead of public routing.</li>
                     </ul>
 
                     <h3>Customer-Managed Keys (CMK)</h3>
                     <p>
-                        Allows enterprises to encrypt cloud objects (DBFS storage bucket, notebook source code metadata)
-                        using their own KMS/Key Vault keys, ensuring data cannot be read by anyone else, including cloud
-                        provider administrators.
+                        Customer-Managed Keys let enterprises control the encryption keys used for supported Databricks
+                        storage and services through AWS KMS, Azure Key Vault, or Google Cloud KMS. The real value is
+                        compliance control, key rotation, and the ability to revoke access if required. It is not an
+                        absolute security magic switch; it is a governance and encryption ownership control that must be
+                        designed carefully because disabling the key can also make workloads or data inaccessible.
                     </p>
                 </section>
 
@@ -544,18 +547,21 @@
                     <span class="badge badge-free">Trial / Community Compliant</span>
                     <h2>4. DBU Economics & Sizing Formulas</h2>
                     <p>
-                        Databricks bills compute workloads based on **DBUs (Databricks Units)** consumed per hour,
-                        multiplied by the DBU cost of the workload type and the cloud provider VM charges.
+                        Databricks pricing is driven by <strong>DBUs (Databricks Units)</strong>, but the full cost
+                        model
+                        depends on the compute type. For Classic Compute, you pay DBUs plus the underlying cloud VM and
+                        storage/network charges. For Serverless, Databricks exposes a published serverless price model
+                        where infrastructure is typically bundled differently.
                     </p>
 
                     <div class="pricing-box">
                         <h4>📊 Pricing Comparison: All-Purpose vs. Jobs Compute</h4>
                         <p>
-                            Workloads are billed differently depending on the cluster type. For AWS Premium/Enterprise
-                            tiers:
-                            <br>• <strong>All-Purpose Compute (Interactive Notebooks):</strong> ~$0.40 per DBU
-                            <br>• <strong>Jobs Compute (Automated Workflows):</strong> ~$0.15 per DBU (Almost 2.7x
-                            cheaper!)
+                            Exact DBU pricing varies by cloud, region, workspace tier, workload type, and whether the
+                            workload is classic or serverless. The durable rule is that <strong>All-Purpose
+                                Compute</strong> is typically priced higher per DBU than <strong>Jobs Compute</strong>
+                            because it supports interactive notebook usage and longer-lived clusters. In customer
+                            conversations, explain the formula first and then plug in that customer's actual rate card.
                         </p>
                     </div>
 
@@ -563,28 +569,30 @@
                     <p>
                         Suppose a daily ingestion pipeline runs for <strong>10 hours</strong> on a cluster of <strong>4
                             nodes</strong> (plus 1 driver, totaling 5 VMs). Each VM size (e.g., <code>m5.2xlarge</code>)
-                        consumes <strong>1.5 DBUs per hour</strong>.
+                        is assumed for illustration to consume <strong>1.5 DBUs per hour</strong>.
                     </p>
 
                     <pre>
 Total Cluster DBUs per Hour:
   5 VMs × 1.5 DBUs/hour = 7.5 DBUs/hour
 
-Scenario A: Running as an Interactive Notebook (All-Purpose DBU rates)
-  7.5 DBUs/hr × 10 hours × $0.40/DBU = $30.00 in DBU charges
+Daily DBUs:
+  7.5 DBUs/hour × 10 hours = 75 DBUs/day
 
-Scenario B: Running as an Automated Workflow Job (Jobs DBU rates)
-  7.5 DBUs/hr × 10 hours × $0.15/DBU = $11.25 in DBU charges
+General Formula:
+  Daily DBU cost = Total daily DBUs × workload-specific DBU rate
 
-Weekly Savings (Moving to Jobs Compute):
-  Interactive: $30.00 × 7 days = $210.00
-  Automated: $11.25 × 7 days = $78.75
-  FDE Cost Savings: $131.25 per week (62.5% Savings!)
+Illustrative Example Only:
+  If interactive rate = $0.40/DBU, then 75 × $0.40 = $30.00/day in DBU charges
+  If jobs rate = $0.15/DBU, then 75 × $0.15 = $11.25/day in DBU charges
+  Illustrative DBU savings from moving to Jobs Compute = $18.75/day
                     </pre>
 
                     <p>
-                        This basic DBU math scales up to millions of dollars when applied across thousands of enterprise
-                        cluster hours.
+                        For <strong>Classic Compute</strong>, add cloud VM, storage, and network costs on top of DBUs.
+                        For <strong>Serverless</strong>, the infrastructure charge is usually bundled into the published
+                        serverless price, so compare total effective cost rather than DBUs alone. This basic math scales
+                        up to meaningful savings when applied across many daily workloads.
                     </p>
                 </section>
 
@@ -601,14 +609,15 @@ Weekly Savings (Moving to Jobs Compute):
                     <ul>
                         <li><strong>Step 1 (Sizing):</strong> Analyze the average data volume of a nightly CSV upload
                             (approx 50GB).</li>
-                        <li><strong>Step 2 (Selection):</strong> Identify an optimal node instance size. For typical
-                            memory-heavy joins, select memory-optimized VMs (e.g., <code>r5.xlarge</code> which consumes
-                            1 DBU/hour).</li>
+                        <li><strong>Step 2 (Selection):</strong> Identify an appropriate node family for the workload.
+                            For example, if joins are memory-heavy, choose a memory-optimized VM and record the DBU rate
+                            you are assuming for that cluster shape.</li>
                         <li><strong>Step 3 (Configuration):</strong> Open the Workflows UI in Databricks. Create a new
                             task.</li>
                         <li><strong>Step 4 (Migration):</strong> Link your PySpark notebook to this task. Rather than
                             utilizing an active "All-Purpose" cluster, configure a brand new <strong>"Job
-                                Cluster"</strong> with 1 Driver and 3 Workers (total 4 nodes, 4 DBUs/hour).</li>
+                                Cluster"</strong> with 1 Driver and 3 Workers, then calculate the estimated DBUs/hour
+                            and total daily cost using your own assumptions.</li>
                         <li><strong>Step 5 (Automation):</strong> Schedule the task to trigger at 2:00 AM daily.</li>
                     </ul>
                 </section>
@@ -622,9 +631,11 @@ Weekly Savings (Moving to Jobs Compute):
                             <div class="tell"><strong>Testing:</strong> the #1 architecture fundamental.</div>The
                             Control Plane is Databricks-managed (web UI, job scheduling, cluster management, metadata)
                             and never processes customer data. The Data Plane is where compute runs and data is
-                            read/written — either Classic (VMs in the customer's own VPC/VNet, so data never leaves
-                            their network) or Serverless (Databricks-managed compute). This split lets enterprises keep
-                            data in their security perimeter while Databricks operates the platform.
+                            read/written — either Classic (VMs in the customer's own VPC/VNet, so compute and storage
+                            access remain in their cloud boundary) or Serverless (Databricks-managed compute). This
+                            split
+                            lets enterprises keep the data path tightly controlled while Databricks operates the
+                            platform.
                         </div>
                     </details>
                     <details class="qa">
@@ -634,8 +645,8 @@ Weekly Savings (Moving to Jobs Compute):
                             <div class="tell"><strong>Testing:</strong> a real architecture decision.</div>Classic when
                             strict compliance requires VMs inside the customer's own subnets or custom
                             networking/instances. Serverless for fast startup, no idle cost, and lower ops — ideal for
-                            SQL warehouses and bursty jobs. Serverless folds infra cost into the DBU rate; Classic bills
-                            the cloud VMs separately.
+                            SQL warehouses and bursty jobs. Classic adds the cloud VM bill separately; Serverless uses a
+                            Databricks-managed price model where infrastructure is bundled differently.
                         </div>
                     </details>
                     <details class="qa">
@@ -644,9 +655,12 @@ Weekly Savings (Moving to Jobs Compute):
                         <div class="qa-body">
                             <div class="tell"><strong>Testing:</strong> DBU math fluency.</div>Compute DBUs/hr = nodes ×
                             DBU/node. Multiply by hours and the per-DBU rate for the workload type. All-Purpose
-                            (interactive) has a much higher rate than Jobs compute, so moving the same cluster to a job
-                            cluster can cut the DBU charge ~2–3×, plus the cloud VM bill on top. I'd quantify both and
-                            recommend Jobs compute + autotermination.
+                            (interactive) is typically priced higher than Jobs Compute for the same cluster shape, but
+                            exact rates depend on cloud, region, tier, and workload. For Classic Compute I would add the
+                            cloud VM bill separately; for Serverless I would use the published serverless price model.
+                            I'd quantify both options with the customer's actual rate card and then recommend Jobs
+                            Compute for scheduled automation if the workflow does not need an always-on interactive
+                            cluster.
                         </div>
                     </details>
                     <details class="qa">
@@ -655,9 +669,10 @@ Weekly Savings (Moving to Jobs Compute):
                         <div class="qa-body">
                             <div class="tell"><strong>Testing:</strong> enterprise networking.</div>Private Link (AWS) /
                             Private Endpoints (Azure) route traffic over the cloud's private backbone instead of the
-                            public internet. Front-end secures user→workspace access (lock to corporate network);
-                            back-end secures Control Plane→Data Plane without public IPs. Combined with CMK, it
-                            satisfies strict security audits.
+                            public internet. Front-end private access secures user and API traffic into the workspace;
+                            back-end private connectivity secures supported Databricks service traffic to compute and
+                            storage. Together with strong identity controls, encryption, and logging, it helps meet
+                            stringent enterprise networking requirements.
                         </div>
                     </details>
                     <details class="qa">
@@ -674,10 +689,12 @@ Weekly Savings (Moving to Jobs Compute):
                         <summary><span class="q-text">What can't you do on Community Edition, and how do you still
                                 demonstrate value?</span></summary>
                         <div class="qa-body">
-                            <div class="tell"><strong>Testing:</strong> tier honesty.</div>No custom VPC, Private Link,
-                            CMK, Unity Catalog, Workflows, or DBU billing. I'd say so plainly and demonstrate the
-                            concepts on a paid trial, or prove the compute/Spark fundamentals on Community and describe
-                            exactly how the enterprise features layer on.
+                            <div class="tell"><strong>Testing:</strong> tier honesty.</div>You cannot realistically
+                            demonstrate enterprise networking features such as customer-managed VPC/VNet deployment,
+                            Private Link / Private Endpoints, CMK, or production billing telemetry there. I'd say so
+                            plainly, prove the architectural concepts and Spark fundamentals in the free environment,
+                            and
+                            explain exactly what changes when you move to a paid trial or enterprise workspace.
                         </div>
                     </details>
                 </section>
@@ -693,24 +710,30 @@ Weekly Savings (Moving to Jobs Compute):
                     <p
                         style="font-size: 0.85rem; color: var(--color-text-secondary); line-height: 1.5; margin-bottom: 1rem;">
                         <strong>Databricks Community Edition</strong> is free but operates entirely in a shared control
-                        plane. You cannot connect cloud virtual networks, provision custom VPCs, configure Private Link,
-                        link Customer-Managed Keys, or access Workflows/DBU billing math.
+                        plane. You cannot connect cloud virtual networks, provision customer-managed VPCs/VNets,
+                        configure Private Link / Private Endpoints, use CMK-backed enterprise controls, or inspect real
+                        cloud-cost and billing telemetry.
                     </p>
                     <p style="font-size: 0.85rem; color: var(--color-text-secondary); line-height: 1.5;">
-                        To test network security, Private Link, and CMK, you must register for a <strong>Databricks
-                            14-Day Full Premium/Enterprise Trial</strong> connected to a paid AWS, Azure, or Google
-                        Cloud account.
+                        To practise network security, private connectivity, and CMK in a real environment, you need a
+                        paid trial or enterprise workspace connected to an AWS, Azure, or Google Cloud account.
                     </p>
                 </div>
 
                 <!-- Next Steps Checklist -->
                 <div class="side-card">
-                    <h3>Next Study Steps</h3>
+                    <h3>Chapter Reinforcement</h3>
                     <ul class="checklist">
-                        <li class="checklist-item checked">Study Control Plane vs. Data Plane roles</li>
-                        <li class="checklist-item">Download Cloud Architecture Network PDF</li>
-                        <li class="checklist-item">Practice All-Purpose vs. Jobs pricing formulas</li>
-                        <li class="checklist-item">Launch a test Job task in Databricks workflow UI</li>
+                        <li class="checklist-item checked">Explain Control Plane vs. Data Plane without notes</li>
+                        <li class="checklist-item checked">Compare Classic Compute vs. Serverless Compute and when to
+                            choose
+                            each</li>
+                        <li class="checklist-item checked">Calculate DBU plus cloud cost for one sample workload from
+                            the
+                            chapter</li>
+                        <li class="checklist-item checked">Describe when All-Purpose Compute is appropriate versus Jobs
+                            Compute
+                        </li>
                     </ul>
                 </div>
 

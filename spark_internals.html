@@ -546,6 +546,26 @@ spark.conf.set("spark.sql.adaptive.skewJoin.enabled", True)
                         </div>
                     </div>
                 </div>
+                <div class="side-card">
+                    <h3>FDE Triage Order</h3>
+                    <p><strong>Read the Spark UI in this order:</strong></p>
+                    <ul class="checklist">
+                        <li class="checklist-item"><strong>1️⃣</strong> Find the slowest stage first, not the noisiest
+                            job summary
+                        </li>
+                        <li class="checklist-item"><strong>2️⃣</strong> Check task duration spread — one long tail
+                            usually means skew
+                        </li>
+                        <li class="checklist-item"><strong>3️⃣</strong> Check shuffle read/write and spill before
+                            changing configs
+                        </li>
+                        <li class="checklist-item"><strong>4️⃣</strong> Compare tasks versus available slots to spot
+                            under-parallelism</li>
+                        <li class="checklist-item"><strong>5️⃣</strong> Only then decide whether the fix is data layout,
+                            join
+                            strategy, or cluster shape</li>
+                    </ul>
+                </div>
             </aside>
         </div>
 

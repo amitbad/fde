@@ -625,8 +625,6 @@ tbody tr:hover td {
     display: flex;
     flex-direction: column;
     gap: 1.5rem;
-    position: sticky;
-    top: 5rem;
     align-self: start;
 }
 
