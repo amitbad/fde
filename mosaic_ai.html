@@ -1,82 +1,134 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ch 12 · Mosaic AI & Databricks Intelligence — FDE Mastery</title>
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect x='10' y='10' width='80' height='80' rx='15' fill='%23ff5a36'/><path d='M30 50 L45 65 L70 35' stroke='white' stroke-width='8' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>">
+    <link rel="icon" type="image/svg+xml"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect x='10' y='10' width='80' height='80' rx='15' fill='%23ff5a36'/><path d='M30 50 L45 65 L70 35' stroke='white' stroke-width='8' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>">
     <link rel="stylesheet" href="styles.css">
 </head>
+
 <body>
-<div class="container">
+    <div class="container">
 
-    <nav class="navbar">
-        <div class="brand">Databricks <span>FDE</span> Mastery</div>
-        <ul class="nav-links">
-            <li><a href="index.html">Home</a></li>
-            <li><a href="architecture_and_pricing.html">Architecture</a></li>
-            <li><a href="spark_internals.html">Spark Internals</a></li>
-            <li><a href="performance_tuning.html">Performance</a></li>
-            <li><a href="unity_catalog_and_security.html">Governance</a></li>
-            <li><a href="delta_live_tables.html">DLT</a></li>
-            <li><a href="streaming.html">Streaming</a></li>
-            <li><a href="iac_and_ci_cd.html">IaC & CI/CD</a></li>
-            <li><a href="mlflow.html">MLflow</a></li>
-            <li><a href="cost_governance.html">Cost/FinOps</a></li>
-            <li><a href="glossary.html">Glossary</a></li>
-            <li><a href="interview_question_bank.html">Q&A Bank</a></li>
-            <li><a href="mosaic_ai.html" class="active">Mosaic AI</a></li>
-        </ul>
-    </nav>
+        <nav class="navbar">
+            <div class="brand">Databricks <span>FDE</span> Mastery</div>
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="architecture_and_pricing.html">Architecture</a></li>
+                <li><a href="spark_internals.html">Spark Internals</a></li>
+                <li><a href="performance_tuning.html">Performance</a></li>
+                <li><a href="unity_catalog_and_security.html">Governance</a></li>
+                <li><a href="delta_live_tables.html">DLT</a></li>
+                <li><a href="streaming.html">Streaming</a></li>
+                <li><a href="iac_and_ci_cd.html">IaC & CI/CD</a></li>
+                <li><a href="mlflow.html">MLflow</a></li>
+                <li><a href="cost_governance.html">Cost/FinOps</a></li>
+                <li><a href="glossary.html">Glossary</a></li>
+                <li><a href="interview_question_bank.html">Q&A Bank</a></li>
+                <li><a href="mosaic_ai.html" class="active">Mosaic AI</a></li>
+                <li><a href="case_studies.html">Case Studies</a></li>
+            </ul>
+        </nav>
 
-    <header class="content-header">
-        <div class="eyebrow">Chapter 12 · Intelligence Platform</div>
-        <h1>Mosaic AI & the Databricks Intelligence Platform</h1>
-        <p>Databricks' 2025–2026 strategic pivot: every data platform is becoming an AI platform. FDEs must wire up Vector Search, Foundation Model APIs, Genie, and Lakehouse Monitoring — not just pipelines.</p>
-        <div class="reading-meta"><span>⏱️ ~3 hours</span><span>🧪 1 lab</span><span>🎯 10 interview questions</span><span class="badge badge-paid" style="margin:0">Most features PAID-tier</span></div>
-    </header>
+        <header class="content-header">
+            <div class="eyebrow">Chapter 12 · Intelligence Platform</div>
+            <h1>Mosaic AI & the Databricks Intelligence Platform</h1>
+            <p>Databricks' 2025–2026 strategic pivot: every data platform is becoming an AI platform. FDEs must wire up
+                Vector Search, Foundation Model APIs, Genie, and Lakehouse Monitoring — not just pipelines.</p>
+            <div class="reading-meta"><span>⏱️ ~3 hours</span><span>🧪 1 lab</span><span>🎯 10 interview
+                    questions</span><span class="badge badge-paid" style="margin:0">Most features PAID-tier</span></div>
+        </header>
 
-    <div class="grid-layout">
-        <main class="main-content">
+        <div class="grid-layout">
+            <main class="main-content">
 
-            <!-- 12.1 Mosaic AI Overview -->
-            <section class="section-card anchor-offset" id="overview">
-                <span class="badge badge-mixed">Conceptual FREE · Features PAID</span>
-                <h2>12.1 Mosaic AI — The Umbrella</h2>
-                <p>Mosaic AI is Databricks' unified AI layer that sits on top of the Lakehouse. It is not a single product — it is the brand for a set of capabilities that covers the full AI lifecycle from raw data to a deployed, governed, production AI application.</p>
-                <div class="table-scroll">
-                    <table>
-                        <thead><tr><th>Capability</th><th>What it does</th><th>FDE touch-point</th></tr></thead>
-                        <tbody>
-                            <tr><td><strong>Foundation Model APIs</strong></td><td>Pay-per-token access to curated LLMs (DBRX, Llama, Mistral) + external model routing (OpenAI, Anthropic, Azure OAI)</td><td>Wire customer apps to models via a single SDK endpoint</td></tr>
-                            <tr><td><strong>Vector Search</strong></td><td>Managed vector database synced to Delta tables — enables RAG without external infra</td><td>Build retrieval-augmented generation pipelines on existing lakehouse data</td></tr>
-                            <tr><td><strong>AI/BI (Genie)</strong></td><td>Natural-language BI: ask questions about data in plain English, get charts and SQL</td><td>Stand up a Genie Space in a customer BI workflow in hours</td></tr>
-                            <tr><td><strong>Lakehouse Monitoring</strong></td><td>Statistical data quality and drift monitoring on Delta tables, produces analysis tables in UC</td><td>Replace ad-hoc DQ scripts with governed, scheduled monitor profiles</td></tr>
-                            <tr><td><strong>Databricks Apps</strong></td><td>Host Streamlit/Gradio/Dash web apps natively inside Databricks with full UC auth</td><td>Deliver customer-facing AI demos/tools without external cloud infra</td></tr>
-                            <tr><td><strong>Model Serving (expanded)</strong></td><td>Single endpoint serves custom models, Foundation Models, and external models behind one API</td><td>A/B routing, traffic splitting, pay-per-token vs provisioned throughput</td></tr>
-                        </tbody>
-                    </table>
-                </div>
-                <div class="box decision-box">
-                    <h4>The FDE mental model</h4>
-                    <p>Think of Mosaic AI as the intelligence layer on top of the Lakehouse: Delta + Unity Catalog stores data; Mosaic AI adds embeddings, retrieval, model serving, and NL interfaces on top of that governed data — without copying it out.</p>
-                </div>
-            </section>
+                <!-- 12.1 Mosaic AI Overview -->
+                <section class="section-card anchor-offset" id="overview">
+                    <span class="badge badge-mixed">Conceptual FREE · Features PAID</span>
+                    <h2>12.1 Mosaic AI — The Umbrella</h2>
+                    <p>Mosaic AI is Databricks' unified AI layer that sits on top of the Lakehouse. It is not a single
+                        product — it is the brand for a set of capabilities that covers the full AI lifecycle from raw
+                        data to a deployed, governed, production AI application.</p>
+                    <div class="table-scroll">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Capability</th>
+                                    <th>What it does</th>
+                                    <th>FDE touch-point</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>Foundation Model APIs</strong></td>
+                                    <td>Pay-per-token access to curated LLMs (DBRX, Llama, Mistral) + external model
+                                        routing (OpenAI, Anthropic, Azure OAI)</td>
+                                    <td>Wire customer apps to models via a single SDK endpoint</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Vector Search</strong></td>
+                                    <td>Managed vector database synced to Delta tables — enables RAG without external
+                                        infra</td>
+                                    <td>Build retrieval-augmented generation pipelines on existing lakehouse data</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>AI/BI (Genie)</strong></td>
+                                    <td>Natural-language BI: ask questions about data in plain English, get charts and
+                                        SQL</td>
+                                    <td>Stand up a Genie Space in a customer BI workflow in hours</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Lakehouse Monitoring</strong></td>
+                                    <td>Statistical data quality and drift monitoring on Delta tables, produces analysis
+                                        tables in UC</td>
+                                    <td>Replace ad-hoc DQ scripts with governed, scheduled monitor profiles</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Databricks Apps</strong></td>
+                                    <td>Host Streamlit/Gradio/Dash web apps natively inside Databricks with full UC auth
+                                    </td>
+                                    <td>Deliver customer-facing AI demos/tools without external cloud infra</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Model Serving (expanded)</strong></td>
+                                    <td>Single endpoint serves custom models, Foundation Models, and external models
+                                        behind one API</td>
+                                    <td>A/B routing, traffic splitting, pay-per-token vs provisioned throughput</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="box decision-box">
+                        <h4>The FDE mental model</h4>
+                        <p>Think of Mosaic AI as the intelligence layer on top of the Lakehouse: Delta + Unity Catalog
+                            stores data; Mosaic AI adds embeddings, retrieval, model serving, and NL interfaces on top
+                            of that governed data — without copying it out.</p>
+                    </div>
+                </section>
 
-            <!-- 12.2 Foundation Model APIs -->
-            <section class="section-card anchor-offset" id="fmapi">
-                <span class="badge badge-paid">Requires pay-per-token or provisioned throughput workspace</span>
-                <h2>12.2 Foundation Model APIs</h2>
-                <p>Foundation Model APIs (FMAPI) let you call curated open-source models (DBRX Instruct, Llama 3, Mistral, BGE-Large-EN for embeddings) and route to external providers (OpenAI, Anthropic, Azure OAI) — all through a single, governance-wrapped SDK endpoint tracked in Unity Catalog.</p>
+                <!-- 12.2 Foundation Model APIs -->
+                <section class="section-card anchor-offset" id="fmapi">
+                    <span class="badge badge-paid">Requires pay-per-token or provisioned throughput workspace</span>
+                    <h2>12.2 Foundation Model APIs</h2>
+                    <p>Foundation Model APIs (FMAPI) let you call curated open-source models (DBRX Instruct, Llama 3,
+                        Mistral, BGE-Large-EN for embeddings) and route to external providers (OpenAI, Anthropic, Azure
+                        OAI) — all through a single, governance-wrapped SDK endpoint tracked in Unity Catalog.</p>
 
-                <h3>Two modes of access</h3>
-                <ul>
-                    <li><strong>Pay-per-token:</strong> call Databricks-hosted models without provisioning clusters. Bill appears in <code>system.billing.usage</code> like any DBU workload. Best for dev/test or bursty inference.</li>
-                    <li><strong>Provisioned Throughput:</strong> dedicated model capacity (tokens/second guaranteed). Use when a customer needs consistent low-latency SLA for production traffic.</li>
-                </ul>
+                    <h3>Two modes of access</h3>
+                    <ul>
+                        <li><strong>Pay-per-token:</strong> call Databricks-hosted models without provisioning clusters.
+                            Bill appears in <code>system.billing.usage</code> like any DBU workload. Best for dev/test
+                            or bursty inference.</li>
+                        <li><strong>Provisioned Throughput:</strong> dedicated model capacity (tokens/second
+                            guaranteed). Use when a customer needs consistent low-latency SLA for production traffic.
+                        </li>
+                    </ul>
 
-                <div class="code-label">Python — call DBRX Instruct via the OpenAI-compatible SDK</div>
-                <pre><code>from openai import OpenAI
+                    <div class="code-label">Python — call DBRX Instruct via the OpenAI-compatible SDK</div>
+                    <pre><code>from openai import OpenAI
 
 client = OpenAI(
     api_key="dapi...",                               <span class="comment"># Databricks personal access token</span>
@@ -93,10 +145,11 @@ response = client.chat.completions.create(
 )
 print(response.choices[0].message.content)</code></pre>
 
-                <h3>External Model Routing</h3>
-                <p>An External Models endpoint proxies calls to OpenAI, Anthropic, or Azure OAI via a UC-governed secret — so the customer's access key is never in notebook code and all calls are audited.</p>
-                <div class="code-label">Create an external model endpoint (Terraform / REST)</div>
-                <pre><code><span class="comment"># via Databricks REST API</span>
+                    <h3>External Model Routing</h3>
+                    <p>An External Models endpoint proxies calls to OpenAI, Anthropic, or Azure OAI via a UC-governed
+                        secret — so the customer's access key is never in notebook code and all calls are audited.</p>
+                    <div class="code-label">Create an external model endpoint (Terraform / REST)</div>
+                    <pre><code><span class="comment"># via Databricks REST API</span>
 POST /api/2.0/serving-endpoints
 {
   "name": "openai-gpt4o-proxy",
@@ -112,41 +165,45 @@ POST /api/2.0/serving-endpoints
     }]
   }
 }</code></pre>
-                <div class="box strategy-box">
-                    <h4>FDE cost framing</h4>
-                    <p>Pay-per-token = no idle cost, great for &lt;1K calls/day. Provisioned throughput = flat cost regardless of usage, break-even at ~500K tokens/day. Always model the volume before recommending PT to a customer.</p>
-                </div>
-            </section>
+                    <div class="box strategy-box">
+                        <h4>FDE cost framing</h4>
+                        <p>Pay-per-token = no idle cost, great for &lt;1K calls/day. Provisioned throughput = flat cost
+                            regardless of usage, break-even at ~500K tokens/day. Always model the volume before
+                            recommending PT to a customer.</p>
+                    </div>
+                </section>
 
-            <!-- 12.3 Vector Search -->
-            <section class="section-card anchor-offset" id="vectorsearch">
-                <span class="badge badge-paid">Vector indexes require a cloud workspace</span>
-                <h2>12.3 Vector Search — Managed Embeddings for RAG</h2>
-                <p>Databricks Vector Search is a serverless vector database that syncs automatically from a Delta table. It eliminates the need to manage Pinecone, Weaviate, or FAISS externally — the index lives in your Lakehouse and is governed by Unity Catalog.</p>
+                <!-- 12.3 Vector Search -->
+                <section class="section-card anchor-offset" id="vectorsearch">
+                    <span class="badge badge-paid">Vector indexes require a cloud workspace</span>
+                    <h2>12.3 Vector Search — Managed Embeddings for RAG</h2>
+                    <p>Databricks Vector Search is a serverless vector database that syncs automatically from a Delta
+                        table. It eliminates the need to manage Pinecone, Weaviate, or FAISS externally — the index
+                        lives in your Lakehouse and is governed by Unity Catalog.</p>
 
-                <h3>RAG architecture on Databricks</h3>
-                <div class="diagram">Source documents (PDFs, wikis, code)
-        │
-        ▼ (ETL pipeline — Delta Live Tables or notebook)
-Delta Table  ←──── Unity Catalog governed
-        │
-        ▼ (Vector Search sync — incremental, scheduled)
-Vector Search Index  ←──── auto-updated when source changes
-        │
-        ▼ (at query time)
-Retrieval: top-K chunks by cosine similarity
-        │
-        ▼
-Prompt = user_question + retrieved_chunks
-        │
-        ▼
-Foundation Model API (DBRX / GPT-4o / Llama)
-        │
-        ▼
-Answer</div>
+                    <h3>RAG architecture on Databricks</h3>
+                    <div class="diagram">Source documents (PDFs, wikis, code)
+                        │
+                        ▼ (ETL pipeline — Delta Live Tables or notebook)
+                        Delta Table ←──── Unity Catalog governed
+                        │
+                        ▼ (Vector Search sync — incremental, scheduled)
+                        Vector Search Index ←──── auto-updated when source changes
+                        │
+                        ▼ (at query time)
+                        Retrieval: top-K chunks by cosine similarity
+                        │
+                        ▼
+                        Prompt = user_question + retrieved_chunks
+                        │
+                        ▼
+                        Foundation Model API (DBRX / GPT-4o / Llama)
+                        │
+                        ▼
+                        Answer</div>
 
-                <div class="code-label">Python — create a Vector Search index and query it</div>
-                <pre><code>from databricks.vector_search.client import VectorSearchClient
+                    <div class="code-label">Python — create a Vector Search index and query it</div>
+                    <pre><code>from databricks.vector_search.client import VectorSearchClient
 
 vsc = VectorSearchClient()
 
@@ -172,34 +229,45 @@ results = idx.similarity_search(
     num_results=5
 )</code></pre>
 
-                <div class="box gotcha-box">
-                    <h4>⚠️ FDE gotcha — chunking strategy matters</h4>
-                    <p>Poor chunk size (too large = noisy retrieval, too small = missing context) degrades RAG quality more than model choice. For enterprise docs: 512–1024 tokens with 15% overlap is a safe starting point. Expose chunk-size as a pipeline parameter so the customer can tune it.</p>
-                </div>
+                    <div class="box gotcha-box">
+                        <h4>⚠️ FDE gotcha — chunking strategy matters</h4>
+                        <p>Poor chunk size (too large = noisy retrieval, too small = missing context) degrades RAG
+                            quality more than model choice. For enterprise docs: 512–1024 tokens with 15% overlap is a
+                            safe starting point. Expose chunk-size as a pipeline parameter so the customer can tune it.
+                        </p>
+                    </div>
 
-                <h3>TRIGGERED vs CONTINUOUS sync</h3>
-                <ul>
-                    <li><strong>TRIGGERED:</strong> runs a pipeline sync on demand or scheduled — cheaper, ~minutes of latency. Use for knowledge bases that update daily.</li>
-                    <li><strong>CONTINUOUS:</strong> near-real-time sync as rows change — higher cost. Use only when retrieval must reflect sub-minute source changes (e.g., live support tickets).</li>
-                </ul>
-            </section>
+                    <h3>TRIGGERED vs CONTINUOUS sync</h3>
+                    <ul>
+                        <li><strong>TRIGGERED:</strong> runs a pipeline sync on demand or scheduled — cheaper, ~minutes
+                            of latency. Use for knowledge bases that update daily.</li>
+                        <li><strong>CONTINUOUS:</strong> near-real-time sync as rows change — higher cost. Use only when
+                            retrieval must reflect sub-minute source changes (e.g., live support tickets).</li>
+                    </ul>
+                </section>
 
-            <!-- 12.4 AI/BI Genie -->
-            <section class="section-card anchor-offset" id="genie">
-                <span class="badge badge-paid">Genie requires Unity Catalog + SQL Warehouse</span>
-                <h2>12.4 AI/BI Genie — Natural Language BI</h2>
-                <p>Genie is Databricks' conversational BI layer. Users ask questions in plain English ("Show me top 10 customers by revenue last quarter") and Genie generates SQL, runs it against UC-governed tables, and returns a chart or table — no SQL knowledge required.</p>
+                <!-- 12.4 AI/BI Genie -->
+                <section class="section-card anchor-offset" id="genie">
+                    <span class="badge badge-paid">Genie requires Unity Catalog + SQL Warehouse</span>
+                    <h2>12.4 AI/BI Genie — Natural Language BI</h2>
+                    <p>Genie is Databricks' conversational BI layer. Users ask questions in plain English ("Show me top
+                        10 customers by revenue last quarter") and Genie generates SQL, runs it against UC-governed
+                        tables, and returns a chart or table — no SQL knowledge required.</p>
 
-                <h3>Anatomy of a Genie Space</h3>
-                <ul>
-                    <li><strong>Tables:</strong> point Genie at specific UC tables (not the whole catalog — be selective).</li>
-                    <li><strong>Instructions:</strong> natural-language context about the business domain, date conventions, KPI definitions — the more you provide, the more accurate Genie's SQL.</li>
-                    <li><strong>SQL Functions / Verified Questions:</strong> pre-vetted SQL snippets Genie can call for complex metrics, preventing hallucinated aggregations.</li>
-                    <li><strong>Access control:</strong> inherits Unity Catalog RBAC — users only see columns they're permitted on.</li>
-                </ul>
+                    <h3>Anatomy of a Genie Space</h3>
+                    <ul>
+                        <li><strong>Tables:</strong> point Genie at specific UC tables (not the whole catalog — be
+                            selective).</li>
+                        <li><strong>Instructions:</strong> natural-language context about the business domain, date
+                            conventions, KPI definitions — the more you provide, the more accurate Genie's SQL.</li>
+                        <li><strong>SQL Functions / Verified Questions:</strong> pre-vetted SQL snippets Genie can call
+                            for complex metrics, preventing hallucinated aggregations.</li>
+                        <li><strong>Access control:</strong> inherits Unity Catalog RBAC — users only see columns
+                            they're permitted on.</li>
+                    </ul>
 
-                <div class="code-label">Sample Genie Instructions (paste in Genie Space UI)</div>
-                <pre><code>## Business Context
+                    <div class="code-label">Sample Genie Instructions (paste in Genie Space UI)</div>
+                    <pre><code>## Business Context
 This is an e-commerce sales database. All revenue figures are in USD.
 "Active customer" means a customer with a purchase in the last 90 days.
 
@@ -212,27 +280,34 @@ This is an e-commerce sales database. All revenue figures are in USD.
 - Net Revenue = GMV - SUM(refund_amount)
 - Repeat rate = COUNT(DISTINCT customer_id with >1 order) / COUNT(DISTINCT customer_id)</code></pre>
 
-                <div class="box strategy-box">
-                    <h4>FDE delivery pattern</h4>
-                    <p>Stand up a Genie Space in the first week of a customer engagement as a quick win — business users get self-serve analytics immediately while you build the proper gold-layer tables underneath. This builds stakeholder trust faster than any presentation.</p>
-                </div>
-            </section>
+                    <div class="box strategy-box">
+                        <h4>FDE delivery pattern</h4>
+                        <p>Stand up a Genie Space in the first week of a customer engagement as a quick win — business
+                            users get self-serve analytics immediately while you build the proper gold-layer tables
+                            underneath. This builds stakeholder trust faster than any presentation.</p>
+                    </div>
+                </section>
 
-            <!-- 12.5 Lakehouse Monitoring -->
-            <section class="section-card anchor-offset" id="monitoring">
-                <span class="badge badge-paid">Lakehouse Monitoring is a paid feature</span>
-                <h2>12.5 Lakehouse Monitoring — Data Quality & Drift at Scale</h2>
-                <p>Lakehouse Monitoring attaches a statistical monitor to any Delta table in UC. It automatically produces two analysis tables — <code>profile_metrics</code> and <code>drift_metrics</code> — that you can query, dashboard, or alert on. No custom DQ pipeline to maintain.</p>
+                <!-- 12.5 Lakehouse Monitoring -->
+                <section class="section-card anchor-offset" id="monitoring">
+                    <span class="badge badge-paid">Lakehouse Monitoring is a paid feature</span>
+                    <h2>12.5 Lakehouse Monitoring — Data Quality & Drift at Scale</h2>
+                    <p>Lakehouse Monitoring attaches a statistical monitor to any Delta table in UC. It automatically
+                        produces two analysis tables — <code>profile_metrics</code> and <code>drift_metrics</code> —
+                        that you can query, dashboard, or alert on. No custom DQ pipeline to maintain.</p>
 
-                <h3>Monitor types</h3>
-                <ul>
-                    <li><strong>TimeSeries monitor:</strong> detects data drift and anomalies sliced by a timestamp column. Best for time-partitioned fact tables and streaming sinks.</li>
-                    <li><strong>InferenceLog monitor:</strong> for ML model scoring tables — tracks prediction drift, label drift, and feature drift between model runs.</li>
-                    <li><strong>Snapshot monitor:</strong> profiles a table at each refresh; no time slicing. Good for slowly-changing reference/dimension tables.</li>
-                </ul>
+                    <h3>Monitor types</h3>
+                    <ul>
+                        <li><strong>TimeSeries monitor:</strong> detects data drift and anomalies sliced by a timestamp
+                            column. Best for time-partitioned fact tables and streaming sinks.</li>
+                        <li><strong>InferenceLog monitor:</strong> for ML model scoring tables — tracks prediction
+                            drift, label drift, and feature drift between model runs.</li>
+                        <li><strong>Snapshot monitor:</strong> profiles a table at each refresh; no time slicing. Good
+                            for slowly-changing reference/dimension tables.</li>
+                    </ul>
 
-                <div class="code-label">Python — attach a TimeSeries monitor</div>
-                <pre><code>from databricks.sdk import WorkspaceClient
+                    <div class="code-label">Python — attach a TimeSeries monitor</div>
+                    <pre><code>from databricks.sdk import WorkspaceClient
 from databricks.sdk.service.catalog import MonitorTimeSeries
 
 w = WorkspaceClient()
@@ -257,28 +332,36 @@ spark.sql("""
     ORDER BY window.start DESC
 """)</code></pre>
 
-                <div class="box decision-box">
-                    <h4>What FDEs use this for</h4>
-                    <p>Replace ad-hoc Great Expectations scripts with a governed, automatic monitor. The produced analysis tables sit in UC with lineage — any downstream dashboard querying them is auditable. Pair with a Databricks SQL alert to page on-call when drift exceeds a threshold.</p>
-                </div>
-            </section>
+                    <div class="box decision-box">
+                        <h4>What FDEs use this for</h4>
+                        <p>Replace ad-hoc Great Expectations scripts with a governed, automatic monitor. The produced
+                            analysis tables sit in UC with lineage — any downstream dashboard querying them is
+                            auditable. Pair with a Databricks SQL alert to page on-call when drift exceeds a threshold.
+                        </p>
+                    </div>
+                </section>
 
-            <!-- 12.6 Databricks Apps -->
-            <section class="section-card anchor-offset" id="apps">
-                <span class="badge badge-paid">Apps is a paid feature (GA 2025)</span>
-                <h2>12.6 Databricks Apps — Host AI Tools Natively</h2>
-                <p>Databricks Apps lets you deploy Streamlit, Gradio, Dash, or any Python web framework directly inside a Databricks workspace — no external cloud infra, no networking config. The app inherits the user's UC identity and can query Databricks SQL Warehouses directly.</p>
+                <!-- 12.6 Databricks Apps -->
+                <section class="section-card anchor-offset" id="apps">
+                    <span class="badge badge-paid">Apps is a paid feature (GA 2025)</span>
+                    <h2>12.6 Databricks Apps — Host AI Tools Natively</h2>
+                    <p>Databricks Apps lets you deploy Streamlit, Gradio, Dash, or any Python web framework directly
+                        inside a Databricks workspace — no external cloud infra, no networking config. The app inherits
+                        the user's UC identity and can query Databricks SQL Warehouses directly.</p>
 
-                <h3>Why it matters for FDEs</h3>
-                <ul>
-                    <li>Deliver a <strong>working RAG chatbot or Genie-style tool</strong> to a customer without provisioning Azure App Service / AWS Lambda / GCP Cloud Run.</li>
-                    <li>App <strong>scales to zero</strong> when idle — no always-on server cost.</li>
-                    <li>Access to secrets via Databricks secret scope, UC table reads via SQL connector — no credentials in app code.</li>
-                    <li><strong>CI/CD via DABs:</strong> include an app definition in your DABs bundle to deploy alongside jobs and pipelines.</li>
-                </ul>
+                    <h3>Why it matters for FDEs</h3>
+                    <ul>
+                        <li>Deliver a <strong>working RAG chatbot or Genie-style tool</strong> to a customer without
+                            provisioning Azure App Service / AWS Lambda / GCP Cloud Run.</li>
+                        <li>App <strong>scales to zero</strong> when idle — no always-on server cost.</li>
+                        <li>Access to secrets via Databricks secret scope, UC table reads via SQL connector — no
+                            credentials in app code.</li>
+                        <li><strong>CI/CD via DABs:</strong> include an app definition in your DABs bundle to deploy
+                            alongside jobs and pipelines.</li>
+                    </ul>
 
-                <div class="code-label">app.py — minimal Streamlit RAG app on Databricks Apps</div>
-                <pre><code>import streamlit as st
+                    <div class="code-label">app.py — minimal Streamlit RAG app on Databricks Apps</div>
+                    <pre><code>import streamlit as st
 from databricks import sql
 from openai import OpenAI
 
@@ -307,8 +390,8 @@ if question:
     )
     st.markdown(resp.choices[0].message.content)</code></pre>
 
-                <div class="code-label">databricks.yml — add app to a DABs bundle</div>
-                <pre><code>bundle:
+                    <div class="code-label">databricks.yml — add app to a DABs bundle</div>
+                    <pre><code>bundle:
   name: fde_rag_bundle
 
 resources:
@@ -321,17 +404,19 @@ resources:
         env:
           - name: DATABRICKS_HOST
             value: ${workspace.host}</code></pre>
-            </section>
+                </section>
 
-            <!-- 12.7 Predictive Optimization & Lakehouse Federation (Bonus) -->
-            <section class="section-card anchor-offset" id="advanced">
-                <span class="badge badge-paid">Both require Unity Catalog + Premium/Enterprise</span>
-                <h2>12.7 Predictive Optimization & Lakehouse Federation</h2>
+                <!-- 12.7 Predictive Optimization & Lakehouse Federation (Bonus) -->
+                <section class="section-card anchor-offset" id="advanced">
+                    <span class="badge badge-paid">Both require Unity Catalog + Premium/Enterprise</span>
+                    <h2>12.7 Predictive Optimization & Lakehouse Federation</h2>
 
-                <h3>Predictive Optimization</h3>
-                <p>Predictive Optimization automatically runs <code>OPTIMIZE</code> and <code>VACUUM</code> on UC-managed tables based on observed query patterns and file statistics — no cron jobs, no manual scheduling. Enable at the catalog or schema level.</p>
-                <div class="code-label">Enable Predictive Optimization</div>
-                <pre><code><span class="comment">-- Enable on a schema (all tables inherit)</span>
+                    <h3>Predictive Optimization</h3>
+                    <p>Predictive Optimization automatically runs <code>OPTIMIZE</code> and <code>VACUUM</code> on
+                        UC-managed tables based on observed query patterns and file statistics — no cron jobs, no manual
+                        scheduling. Enable at the catalog or schema level.</p>
+                    <div class="code-label">Enable Predictive Optimization</div>
+                    <pre><code><span class="comment">-- Enable on a schema (all tables inherit)</span>
 ALTER SCHEMA main.sales
     SET TBLPROPERTIES ('delta.predictiveOptimization.managed' = 'auto');
 
@@ -339,15 +424,19 @@ ALTER SCHEMA main.sales
 SELECT * FROM system.storage.predictive_optimization_operations_history
 WHERE table_name = 'orders'
 ORDER BY operation_end DESC LIMIT 20;</code></pre>
-                <div class="box strategy-box">
-                    <h4>FDE value</h4>
-                    <p>Replace the customer's cron-based OPTIMIZE job with Predictive Optimization. Same query performance, zero maintenance, and Databricks charges you only when it runs — operational toil drops to zero for file compaction.</p>
-                </div>
+                    <div class="box strategy-box">
+                        <h4>FDE value</h4>
+                        <p>Replace the customer's cron-based OPTIMIZE job with Predictive Optimization. Same query
+                            performance, zero maintenance, and Databricks charges you only when it runs — operational
+                            toil drops to zero for file compaction.</p>
+                    </div>
 
-                <h3>Lakehouse Federation</h3>
-                <p>Lakehouse Federation lets Databricks query external databases (PostgreSQL, MySQL, Redshift, BigQuery, Snowflake, SQL Server) directly via <code>catalog.schema.table</code> without ETL. Data stays in the source system; Unity Catalog controls who can query it.</p>
-                <div class="code-label">Set up a federated PostgreSQL connection</div>
-                <pre><code><span class="comment">-- 1. Create a connection (admin once)</span>
+                    <h3>Lakehouse Federation</h3>
+                    <p>Lakehouse Federation lets Databricks query external databases (PostgreSQL, MySQL, Redshift,
+                        BigQuery, Snowflake, SQL Server) directly via <code>catalog.schema.table</code> without ETL.
+                        Data stays in the source system; Unity Catalog controls who can query it.</p>
+                    <div class="code-label">Set up a federated PostgreSQL connection</div>
+                    <pre><code><span class="comment">-- 1. Create a connection (admin once)</span>
 CREATE CONNECTION pg_prod
 TYPE POSTGRESQL
 OPTIONS (
@@ -365,93 +454,227 @@ OPTIONS (database 'app_db');
 
 <span class="comment">-- 3. Query as if it were a UC table — no ETL</span>
 SELECT * FROM pg_catalog.public.customers LIMIT 100;</code></pre>
-                <div class="box decision-box">
-                    <h4>When to use Federation vs ETL</h4>
-                    <p>Federation for: ad-hoc exploration, reporting on live OLTP data, enrichment joins during migration. ETL into Delta for: performance-critical pipelines, offline ML features, when source SLA/availability is uncertain. FDEs often use both — federate first to prove the data model, then ETL the hot path.</p>
+                    <div class="box decision-box">
+                        <h4>When to use Federation vs ETL</h4>
+                        <p>Federation for: ad-hoc exploration, reporting on live OLTP data, enrichment joins during
+                            migration. ETL into Delta for: performance-critical pipelines, offline ML features, when
+                            source SLA/availability is uncertain. FDEs often use both — federate first to prove the data
+                            model, then ETL the hot path.</p>
+                    </div>
+                </section>
+
+                <!-- 12.8 Lab -->
+                <section class="section-card anchor-offset" id="lab">
+                    <span class="badge badge-paid">Requires cloud workspace with Mosaic AI enabled</span>
+                    <h2>12.8 Hands-On Lab — Build a Minimal RAG App</h2>
+                    <ol>
+                        <li>Create a Delta table in UC with 20+ text documents (use any public wiki text).</li>
+                        <li>Create a Vector Search endpoint and a Delta Sync index on that table using
+                            <code>databricks-bge-large-en</code> embeddings.</li>
+                        <li>Trigger a sync and verify <code>num_vectors</code> > 0 in the index status.</li>
+                        <li>Write a Python cell that calls <code>similarity_search()</code> and prints the top-3 chunks
+                            for a test question.</li>
+                        <li>Call a Foundation Model API endpoint (DBRX or external GPT-4o) with your retrieved chunks as
+                            context and print the answer.</li>
+                        <li>(Bonus) Wrap steps 4–5 in a Streamlit <code>app.py</code> and deploy with Databricks Apps.
+                        </li>
+                        <li>(Bonus) Attach a Lakehouse Monitor to the Delta source table and inspect the generated
+                            <code>profile_metrics</code> table after the first run.</li>
+                    </ol>
+                </section>
+
+                <!-- 12.9 Interview Q&A -->
+                <section class="section-card anchor-offset" id="qa">
+                    <h2>12.9 Interview Questions & Model Answers</h2>
+
+                    <details class="qa">
+                        <summary><span class="q-text">What is Mosaic AI and why should an FDE care about it?</span>
+                        </summary>
+                        <div class="qa-body">
+                            <div class="tell"><strong>Testing:</strong> platform-level awareness, 2025-2026 relevance.
+                            </div>Mosaic AI is Databricks' unified AI layer — Foundation Model APIs, Vector Search,
+                            AI/BI Genie, Lakehouse Monitoring, and Model Serving under one governance model. FDEs care
+                            because customers now ask "how do we add AI to our data" not just "how do we move data." An
+                            FDE who can wire a RAG chatbot onto existing UC tables in a day is far more valuable than
+                            one who can only build ETL pipelines.
+                        </div>
+                    </details>
+
+                    <details class="qa">
+                        <summary><span class="q-text">Design a RAG system for a customer who wants a chatbot over their
+                                internal documentation.</span></summary>
+                        <div class="qa-body">
+                            <div class="tell"><strong>Testing:</strong> end-to-end architecture synthesis.</div>Ingest
+                            docs into a Delta table (bronze → silver cleaned text via DLT). Create a Vector Search
+                            endpoint + Delta Sync index using BGE embeddings — TRIGGERED sync nightly. At query time:
+                            embed user question, retrieve top-5 chunks, construct a prompt with context, call DBRX
+                            Instruct or an external model via FMAPI. Wrap in a Streamlit app deployed via Databricks
+                            Apps, governed by UC (users only retrieve chunks their row-filter allows). Log every
+                            retrieval to a Delta table for monitoring. Cost: pay-per-token FMAPI — no always-on serving
+                            endpoint needed for &lt;500 users.
+                        </div>
+                    </details>
+
+                    <details class="qa">
+                        <summary><span class="q-text">Pay-per-token Foundation Model APIs vs Provisioned Throughput —
+                                how do you choose?</span></summary>
+                        <div class="qa-body">
+                            <div class="tell"><strong>Testing:</strong> cost/architecture judgement.</div>Pay-per-token
+                            has no idle cost and scales instantly — right for dev/test, bursty or low-volume (&lt;~500K
+                            tokens/day). Provisioned Throughput guarantees latency SLA with dedicated capacity — right
+                            for production serving with consistent high volume or strict p99 requirements. I always
+                            model daily token volume first; provisioned throughput break-even is typically above 500K–1M
+                            tokens/day.
+                        </div>
+                    </details>
+
+                    <details class="qa">
+                        <summary><span class="q-text">What is Lakehouse Monitoring and how does it differ from Great
+                                Expectations?</span></summary>
+                        <div class="qa-body">
+                            <div class="tell"><strong>Testing:</strong> DQ tooling positioning.</div>Lakehouse
+                            Monitoring is a first-class UC feature: attach a monitor to a Delta table, it automatically
+                            produces governed <code>profile_metrics</code> and <code>drift_metrics</code> tables on a
+                            schedule. No code to maintain, lineage tracked, dashboardable immediately. Great
+                            Expectations requires custom pipeline code, an Expectations store, and separate
+                            orchestration — more flexible but more ops burden. I recommend LHM for standard statistical
+                            DQ on Delta tables and GE when customers need highly custom, assertion-level validation
+                            logic.
+                        </div>
+                    </details>
+
+                    <details class="qa">
+                        <summary><span class="q-text">How does Vector Search handle updates to the source Delta
+                                table?</span></summary>
+                        <div class="qa-body">
+                            <div class="tell"><strong>Testing:</strong> operational depth.</div>Delta Sync indexes track
+                            the Delta transaction log. In TRIGGERED mode, a sync pipeline runs on schedule or on-demand
+                            and upserts/deletes changed vectors. In CONTINUOUS mode, it reacts to each transaction
+                            commit. The key point: deletes and updates in the source table propagate to the index — no
+                            stale vectors. For a nightly-updated knowledge base, TRIGGERED keeps cost low.
+                        </div>
+                    </details>
+
+                    <details class="qa">
+                        <summary><span class="q-text">A customer wants to query their PostgreSQL OLTP database from
+                                Databricks without ETL. What do you use?</span></summary>
+                        <div class="qa-body">
+                            <div class="tell"><strong>Testing:</strong> Lakehouse Federation awareness.</div>Lakehouse
+                            Federation. Create a UC Connection of type POSTGRESQL, then a Foreign Catalog — the table
+                            appears as <code>pg_catalog.schema.table</code> in Databricks SQL/notebooks, governed by UC
+                            RBAC. No data is copied; Databricks pushes predicates to the source. Appropriate for
+                            reporting on live OLTP or migration exploration. For performance-critical or
+                            availability-sensitive workloads, I'd follow up with a Structured Streaming or DLT ingestion
+                            into Delta.
+                        </div>
+                    </details>
+
+                    <details class="qa">
+                        <summary><span class="q-text">What is Predictive Optimization and when should you enable
+                                it?</span></summary>
+                        <div class="qa-body">
+                            <div class="tell"><strong>Testing:</strong> Delta/UC operational best practice.</div>
+                            Predictive Optimization auto-runs OPTIMIZE and VACUUM on UC-managed tables based on query
+                            patterns and file stats — eliminating manual maintenance jobs. Enable at schema level for
+                            most UC-managed fact tables. Exception: disable on tables with very frequent small appends
+                            (streaming sinks mid-microbatch) where you control OPTIMIZE timing precisely for cost
+                            reasons.
+                        </div>
+                    </details>
+
+                    <details class="qa">
+                        <summary><span class="q-text">A customer wants business analysts to query data in natural
+                                language without writing SQL. What do you recommend?</span></summary>
+                        <div class="qa-body">
+                            <div class="tell"><strong>Testing:</strong> AI/BI Genie positioning.</div>AI/BI Genie —
+                            create a Genie Space, point it at the relevant gold-layer UC tables, write clear business
+                            instructions (KPI definitions, date conventions, filter defaults), and add verified SQL
+                            functions for complex metrics. Analysts get a chat interface; Genie generates and runs the
+                            SQL. Access is governed by UC RBAC, so row filters and column masks apply automatically.
+                            Deliver this in day one of an engagement as a quick win.
+                        </div>
+                    </details>
+
+                    <details class="qa">
+                        <summary><span class="q-text">How do you deploy a Streamlit AI app to customers without external
+                                cloud infrastructure?</span></summary>
+                        <div class="qa-body">
+                            <div class="tell"><strong>Testing:</strong> Databricks Apps awareness.</div>Databricks Apps.
+                            Package the Streamlit app with a <code>databricks.yml</code> app resource definition, deploy
+                            via DABs (<code>databricks bundle deploy</code>). The app runs inside the workspace — no
+                            external server, no networking, inherits UC identity for data access, uses Databricks secret
+                            scopes for keys. Scales to zero when idle, so no always-on cost. CI/CD drops in naturally
+                            alongside existing job/pipeline deployments.
+                        </div>
+                    </details>
+
+                    <details class="qa">
+                        <summary><span class="q-text">What's available for AI/ML on Community Edition?</span></summary>
+                        <div class="qa-body">
+                            <div class="tell"><strong>Testing:</strong> tier honesty.</div>Community Edition has no
+                            Mosaic AI features — no Vector Search, no Foundation Model APIs, no Genie, no Apps. You can
+                            practise MLflow tracking and local model training, and study the SDK APIs, but all Mosaic AI
+                            features require a full cloud workspace. I tell customers this clearly before scoping a
+                            proof of concept.
+                        </div>
+                    </details>
+                </section>
+
+                <div class="page-nav">
+                    <a href="interview_question_bank.html">
+                        <div class="dir">◀ Previous</div>
+                        <div class="pg-title">Ch 11 · Interview Question Bank</div>
+                    </a>
+                    <a class="next" href="case_studies.html">
+                        <div class="dir">Next ▶</div>
+                        <div class="pg-title">Ch 13 · Case Studies</div>
+                    </a>
                 </div>
-            </section>
+            </main>
 
-            <!-- 12.8 Lab -->
-            <section class="section-card anchor-offset" id="lab">
-                <span class="badge badge-paid">Requires cloud workspace with Mosaic AI enabled</span>
-                <h2>12.8 Hands-On Lab — Build a Minimal RAG App</h2>
-                <ol>
-                    <li>Create a Delta table in UC with 20+ text documents (use any public wiki text).</li>
-                    <li>Create a Vector Search endpoint and a Delta Sync index on that table using <code>databricks-bge-large-en</code> embeddings.</li>
-                    <li>Trigger a sync and verify <code>num_vectors</code> > 0 in the index status.</li>
-                    <li>Write a Python cell that calls <code>similarity_search()</code> and prints the top-3 chunks for a test question.</li>
-                    <li>Call a Foundation Model API endpoint (DBRX or external GPT-4o) with your retrieved chunks as context and print the answer.</li>
-                    <li>(Bonus) Wrap steps 4–5 in a Streamlit <code>app.py</code> and deploy with Databricks Apps.</li>
-                    <li>(Bonus) Attach a Lakehouse Monitor to the Delta source table and inspect the generated <code>profile_metrics</code> table after the first run.</li>
-                </ol>
-            </section>
+            <aside class="sidebar-panel">
+                <div class="side-card">
+                    <h3>On This Page</h3>
+                    <ul class="toc">
+                        <li><a href="#overview">12.1 Mosaic AI Overview</a></li>
+                        <li><a href="#fmapi">12.2 Foundation Model APIs</a></li>
+                        <li><a href="#vectorsearch">12.3 Vector Search</a></li>
+                        <li><a href="#genie">12.4 AI/BI Genie</a></li>
+                        <li><a href="#monitoring">12.5 Lakehouse Monitoring</a></li>
+                        <li><a href="#apps">12.6 Databricks Apps</a></li>
+                        <li><a href="#advanced">12.7 Predictive Opt. & Federation</a></li>
+                        <li><a href="#lab">12.8 Hands-On Lab</a></li>
+                        <li><a href="#qa">12.9 Interview Q&A</a></li>
+                    </ul>
+                </div>
+                <div class="side-card">
+                    <h3>Key Framing</h3>
+                    <p><strong>Mosaic AI</strong> = intelligence layer on top of the Lakehouse. Data stays in Delta/UC;
+                        AI runs on top of it.</p>
+                    <p><strong>TRIGGERED</strong> Vector Sync = nightly, cheap. <strong>CONTINUOUS</strong> =
+                        near-real-time, expensive.</p>
+                    <p><strong>Pay-per-token</strong> vs <strong>Provisioned Throughput</strong>: always model daily
+                        token volume first.</p>
+                    <p><strong>Genie Space</strong> = fastest day-1 win for business stakeholders.</p>
+                    <p><strong>Lakehouse Federation</strong> = query external DBs via UC, no ETL copy.</p>
+                </div>
+                <div class="side-card">
+                    <h3>Cost Levers</h3>
+                    <ul class="checklist">
+                        <li class="checklist-item"><input type="checkbox"><span>Use TRIGGERED (not CONTINUOUS) Vector
+                                Sync unless sub-minute freshness needed</span></li>
+                        <li class="checklist-item"><input type="checkbox"><span>Start with pay-per-token FMAPI; only
+                                move to PT above ~500K tokens/day</span></li>
+                        <li class="checklist-item"><input type="checkbox"><span>Databricks Apps scale to zero — always
+                                prefer over always-on external servers</span></li>
+                        <li class="checklist-item"><input type="checkbox"><span>Enable Predictive Optimization to
+                                eliminate manual OPTIMIZE cron jobs</span></li>
+                    </ul>
+                </div>
+            </aside>
+        </div>
 
-            <!-- 12.9 Interview Q&A -->
-            <section class="section-card anchor-offset" id="qa">
-                <h2>12.9 Interview Questions & Model Answers</h2>
-
-                <details class="qa"><summary><span class="q-text">What is Mosaic AI and why should an FDE care about it?</span></summary><div class="qa-body"><div class="tell"><strong>Testing:</strong> platform-level awareness, 2025-2026 relevance.</div>Mosaic AI is Databricks' unified AI layer — Foundation Model APIs, Vector Search, AI/BI Genie, Lakehouse Monitoring, and Model Serving under one governance model. FDEs care because customers now ask "how do we add AI to our data" not just "how do we move data." An FDE who can wire a RAG chatbot onto existing UC tables in a day is far more valuable than one who can only build ETL pipelines.</div></details>
-
-                <details class="qa"><summary><span class="q-text">Design a RAG system for a customer who wants a chatbot over their internal documentation.</span></summary><div class="qa-body"><div class="tell"><strong>Testing:</strong> end-to-end architecture synthesis.</div>Ingest docs into a Delta table (bronze → silver cleaned text via DLT). Create a Vector Search endpoint + Delta Sync index using BGE embeddings — TRIGGERED sync nightly. At query time: embed user question, retrieve top-5 chunks, construct a prompt with context, call DBRX Instruct or an external model via FMAPI. Wrap in a Streamlit app deployed via Databricks Apps, governed by UC (users only retrieve chunks their row-filter allows). Log every retrieval to a Delta table for monitoring. Cost: pay-per-token FMAPI — no always-on serving endpoint needed for &lt;500 users.</div></details>
-
-                <details class="qa"><summary><span class="q-text">Pay-per-token Foundation Model APIs vs Provisioned Throughput — how do you choose?</span></summary><div class="qa-body"><div class="tell"><strong>Testing:</strong> cost/architecture judgement.</div>Pay-per-token has no idle cost and scales instantly — right for dev/test, bursty or low-volume (&lt;~500K tokens/day). Provisioned Throughput guarantees latency SLA with dedicated capacity — right for production serving with consistent high volume or strict p99 requirements. I always model daily token volume first; provisioned throughput break-even is typically above 500K–1M tokens/day.</div></details>
-
-                <details class="qa"><summary><span class="q-text">What is Lakehouse Monitoring and how does it differ from Great Expectations?</span></summary><div class="qa-body"><div class="tell"><strong>Testing:</strong> DQ tooling positioning.</div>Lakehouse Monitoring is a first-class UC feature: attach a monitor to a Delta table, it automatically produces governed <code>profile_metrics</code> and <code>drift_metrics</code> tables on a schedule. No code to maintain, lineage tracked, dashboardable immediately. Great Expectations requires custom pipeline code, an Expectations store, and separate orchestration — more flexible but more ops burden. I recommend LHM for standard statistical DQ on Delta tables and GE when customers need highly custom, assertion-level validation logic.</div></details>
-
-                <details class="qa"><summary><span class="q-text">How does Vector Search handle updates to the source Delta table?</span></summary><div class="qa-body"><div class="tell"><strong>Testing:</strong> operational depth.</div>Delta Sync indexes track the Delta transaction log. In TRIGGERED mode, a sync pipeline runs on schedule or on-demand and upserts/deletes changed vectors. In CONTINUOUS mode, it reacts to each transaction commit. The key point: deletes and updates in the source table propagate to the index — no stale vectors. For a nightly-updated knowledge base, TRIGGERED keeps cost low.</div></details>
-
-                <details class="qa"><summary><span class="q-text">A customer wants to query their PostgreSQL OLTP database from Databricks without ETL. What do you use?</span></summary><div class="qa-body"><div class="tell"><strong>Testing:</strong> Lakehouse Federation awareness.</div>Lakehouse Federation. Create a UC Connection of type POSTGRESQL, then a Foreign Catalog — the table appears as <code>pg_catalog.schema.table</code> in Databricks SQL/notebooks, governed by UC RBAC. No data is copied; Databricks pushes predicates to the source. Appropriate for reporting on live OLTP or migration exploration. For performance-critical or availability-sensitive workloads, I'd follow up with a Structured Streaming or DLT ingestion into Delta.</div></details>
-
-                <details class="qa"><summary><span class="q-text">What is Predictive Optimization and when should you enable it?</span></summary><div class="qa-body"><div class="tell"><strong>Testing:</strong> Delta/UC operational best practice.</div>Predictive Optimization auto-runs OPTIMIZE and VACUUM on UC-managed tables based on query patterns and file stats — eliminating manual maintenance jobs. Enable at schema level for most UC-managed fact tables. Exception: disable on tables with very frequent small appends (streaming sinks mid-microbatch) where you control OPTIMIZE timing precisely for cost reasons.</div></details>
-
-                <details class="qa"><summary><span class="q-text">A customer wants business analysts to query data in natural language without writing SQL. What do you recommend?</span></summary><div class="qa-body"><div class="tell"><strong>Testing:</strong> AI/BI Genie positioning.</div>AI/BI Genie — create a Genie Space, point it at the relevant gold-layer UC tables, write clear business instructions (KPI definitions, date conventions, filter defaults), and add verified SQL functions for complex metrics. Analysts get a chat interface; Genie generates and runs the SQL. Access is governed by UC RBAC, so row filters and column masks apply automatically. Deliver this in day one of an engagement as a quick win.</div></details>
-
-                <details class="qa"><summary><span class="q-text">How do you deploy a Streamlit AI app to customers without external cloud infrastructure?</span></summary><div class="qa-body"><div class="tell"><strong>Testing:</strong> Databricks Apps awareness.</div>Databricks Apps. Package the Streamlit app with a <code>databricks.yml</code> app resource definition, deploy via DABs (<code>databricks bundle deploy</code>). The app runs inside the workspace — no external server, no networking, inherits UC identity for data access, uses Databricks secret scopes for keys. Scales to zero when idle, so no always-on cost. CI/CD drops in naturally alongside existing job/pipeline deployments.</div></details>
-
-                <details class="qa"><summary><span class="q-text">What's available for AI/ML on Community Edition?</span></summary><div class="qa-body"><div class="tell"><strong>Testing:</strong> tier honesty.</div>Community Edition has no Mosaic AI features — no Vector Search, no Foundation Model APIs, no Genie, no Apps. You can practise MLflow tracking and local model training, and study the SDK APIs, but all Mosaic AI features require a full cloud workspace. I tell customers this clearly before scoping a proof of concept.</div></details>
-            </section>
-
-            <div class="page-nav">
-                <a href="interview_question_bank.html"><div class="dir">◀ Previous</div><div class="pg-title">Ch 11 · Interview Question Bank</div></a>
-                <a class="next" href="index.html"><div class="dir">Back to ▶</div><div class="pg-title">Home / Curriculum</div></a>
-            </div>
-        </main>
-
-        <aside class="sidebar-panel">
-            <div class="side-card">
-                <h3>On This Page</h3>
-                <ul class="toc">
-                    <li><a href="#overview">12.1 Mosaic AI Overview</a></li>
-                    <li><a href="#fmapi">12.2 Foundation Model APIs</a></li>
-                    <li><a href="#vectorsearch">12.3 Vector Search</a></li>
-                    <li><a href="#genie">12.4 AI/BI Genie</a></li>
-                    <li><a href="#monitoring">12.5 Lakehouse Monitoring</a></li>
-                    <li><a href="#apps">12.6 Databricks Apps</a></li>
-                    <li><a href="#advanced">12.7 Predictive Opt. & Federation</a></li>
-                    <li><a href="#lab">12.8 Hands-On Lab</a></li>
-                    <li><a href="#qa">12.9 Interview Q&A</a></li>
-                </ul>
-            </div>
-            <div class="side-card">
-                <h3>Key Framing</h3>
-                <p><strong>Mosaic AI</strong> = intelligence layer on top of the Lakehouse. Data stays in Delta/UC; AI runs on top of it.</p>
-                <p><strong>TRIGGERED</strong> Vector Sync = nightly, cheap. <strong>CONTINUOUS</strong> = near-real-time, expensive.</p>
-                <p><strong>Pay-per-token</strong> vs <strong>Provisioned Throughput</strong>: always model daily token volume first.</p>
-                <p><strong>Genie Space</strong> = fastest day-1 win for business stakeholders.</p>
-                <p><strong>Lakehouse Federation</strong> = query external DBs via UC, no ETL copy.</p>
-            </div>
-            <div class="side-card">
-                <h3>Cost Levers</h3>
-                <ul class="checklist">
-                    <li class="checklist-item"><input type="checkbox"><span>Use TRIGGERED (not CONTINUOUS) Vector Sync unless sub-minute freshness needed</span></li>
-                    <li class="checklist-item"><input type="checkbox"><span>Start with pay-per-token FMAPI; only move to PT above ~500K tokens/day</span></li>
-                    <li class="checklist-item"><input type="checkbox"><span>Databricks Apps scale to zero — always prefer over always-on external servers</span></li>
-                    <li class="checklist-item"><input type="checkbox"><span>Enable Predictive Optimization to eliminate manual OPTIMIZE cron jobs</span></li>
-                </ul>
-            </div>
-        </aside>
     </div>
-
-</div>
 </body>
+
 </html>

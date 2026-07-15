@@ -29,6 +29,7 @@
                 <li><a href="glossary.html">Glossary</a></li>
                 <li><a href="interview_question_bank.html">Q&A Bank</a></li>
                 <li><a href="mosaic_ai.html">Mosaic AI</a></li>
+                <li><a href="case_studies.html">Case Studies</a></li>
             </ul>
         </nav>
 
@@ -74,7 +75,8 @@
                     <p>The checkpoint directory is the stream's durable memory. It stores <strong>source
                             offsets</strong> (what input has been consumed) and <strong>state</strong> (for
                         aggregations/joins). Combined with a replayable source and an idempotent sink, it delivers
-                        <strong>exactly-once</strong> end-to-end.</p>
+                        <strong>exactly-once</strong> end-to-end.
+                    </p>
                     <div class="code-label">A minimal, correct streaming write</div>
                     <pre><code>(spark.readStream
       .format("delta").table("bronze_events")
@@ -223,7 +225,8 @@
                     <ol>
                         <li>Create a Delta table <code>bronze_events</code> and append a few rows.</li>
                         <li>Start a stream from it into <code>silver_events</code> with a checkpoint and
-                            <code>availableNow=True</code>. Confirm row counts match.</li>
+                            <code>availableNow=True</code>. Confirm row counts match.
+                        </li>
                         <li>Append more rows to bronze and rerun the same stream. Confirm <em>only the new rows</em> are
                             processed (offsets advanced) — not the whole table.</li>
                         <li>Now delete the checkpoint directory and rerun. Observe every row reprocessed → duplicates in

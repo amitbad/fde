@@ -29,6 +29,7 @@
                 <li><a href="glossary.html">Glossary</a></li>
                 <li><a href="interview_question_bank.html">Q&A Bank</a></li>
                 <li><a href="mosaic_ai.html">Mosaic AI</a></li>
+                <li><a href="case_studies.html">Case Studies</a></li>
             </ul>
         </nav>
 
@@ -54,7 +55,8 @@
                         a job, manage checkpoints, handle failures, and hope the order is right. DLT is
                         <strong>declarative</strong>: you describe each dataset as a function, and the engine derives
                         the dependency graph, decides what to recompute, enforces quality, and gives you lineage and
-                        metrics for free.</p>
+                        metrics for free.
+                    </p>
                     <div class="table-scroll">
                         <table>
                             <thead>
@@ -134,11 +136,13 @@
                         <li><strong>Streaming table</strong> (<code>@dlt.table</code> reading a
                             <code>spark.readStream</code> source): processes each input record <strong>exactly
                                 once</strong>, incrementally. Ideal for append-only ingestion (bronze) where you never
-                            want to reprocess old data.</li>
+                            want to reprocess old data.
+                        </li>
                         <li><strong>Materialized view</strong> (batch <code>@dlt.table</code> /
                             <code>CREATE MATERIALIZED VIEW</code>): the result is fully recomputed (or incrementally
                             refreshed by Enzyme) whenever inputs change. Ideal for aggregations and joins (silver/gold)
-                            where correctness of the full result matters.</li>
+                            where correctness of the full result matters.
+                        </li>
                     </ul>
                     <div class="code-label">Python DLT — bronze streaming ingest with Auto Loader</div>
                     <pre><code>import dlt
@@ -253,25 +257,29 @@ STORED AS SCD TYPE 2;</code></pre>
                     <h2>5.6 Hands-On Lab — A Three-Layer Pipeline</h2>
                     <ol>
                         <li>Upload a few JSON files of fake orders to a cloud volume path (e.g.
-                            <code>/Volumes/main/landing/orders</code>).</li>
+                            <code>/Volumes/main/landing/orders</code>).
+                        </li>
                         <li>Create a notebook with the three <code>@dlt.table</code> functions above (bronze → silver →
                             gold aggregate by region).</li>
                         <li>Add the three expectation types to the silver table.</li>
                         <li>Go to <strong>Workflows → Delta Live Tables → Create pipeline</strong>, point it at the
                             notebook, choose a target Unity Catalog schema, and set the pipeline to
-                            <strong>Triggered</strong> mode.</li>
+                            <strong>Triggered</strong> mode.
+                        </li>
                         <li>Run it. Open the pipeline graph — confirm the auto-inferred bronze→silver→gold DAG and click
                             each node to see row counts and expectation pass rates.</li>
                         <li>Drop a malformed file into the landing path and rerun; confirm the
                             <code>expect_or_drop</code> rule quarantines the bad rows and the metric appears in the
-                            event log.</li>
+                            event log.
+                        </li>
                     </ol>
                     <div class="box decision-box">
                         <h4>Triggered vs Continuous</h4>
                         <p><strong>Triggered</strong> pipelines process available data then stop (cheapest, batch-like).
                             <strong>Continuous</strong> pipelines keep clusters running for low-latency streaming (more
                             expensive). Choose Triggered unless the customer has a real sub-minute latency SLA — a
-                            frequent cost-optimization win.</p>
+                            frequent cost-optimization win.
+                        </p>
                     </div>
                 </section>
 
@@ -386,7 +394,8 @@ STORED AS SCD TYPE 2;</code></pre>
                 <div class="side-card">
                     <h3>Remember</h3>
                     <p><strong>Bronze</strong> = raw history · <strong>Silver</strong> = clean/conformed ·
-                        <strong>Gold</strong> = business aggregates.</p>
+                        <strong>Gold</strong> = business aggregates.
+                    </p>
                     <p><strong>Streaming table</strong> = process once, incremental. <strong>Materialized view</strong>
                         = full/refreshed result.</p>
                     <p><strong>SEQUENCE BY</strong> fixes out-of-order CDC.</p>

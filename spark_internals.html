@@ -29,6 +29,7 @@
                 <li><a href="glossary.html">Glossary</a></li>
                 <li><a href="interview_question_bank.html">Q&A Bank</a></li>
                 <li><a href="mosaic_ai.html">Mosaic AI</a></li>
+                <li><a href="case_studies.html">Case Studies</a></li>
             </ul>
         </nav>
 
@@ -93,7 +94,8 @@
                     <p>Spark does <strong>nothing</strong> when you chain transformations. It only builds a recipe (a
                         logical plan). Work is triggered when an <strong>action</strong> is called. This is why a cell
                         with five <code>.filter()</code>/<code>.join()</code> calls returns instantly, but
-                        <code>.count()</code> takes minutes.</p>
+                        <code>.count()</code> takes minutes.
+                    </p>
                     <div class="code-label">PySpark — nothing executes until the action</div>
                     <pre><code><span class="comment"># Transformations — lazy, just build the plan. Returns instantly.</span>
 df = spark.read.table("sales.orders")          <span class="comment"># narrow</span>
@@ -106,17 +108,20 @@ df3.show()                                     <span class="comment"># triggers 
                     <ul>
                         <li><strong>Narrow transformation</strong> (<code>filter</code>, <code>select</code>,
                             <code>withColumn</code>): each input partition contributes to exactly one output partition.
-                            No data moves between executors. Cheap.</li>
+                            No data moves between executors. Cheap.
+                        </li>
                         <li><strong>Wide transformation</strong> (<code>groupBy</code>, <code>join</code>,
                             <code>distinct</code>, <code>orderBy</code>): output partitions depend on many input
                             partitions, so data is <strong>shuffled</strong> across the network. Expensive — this is
-                            where a <strong>stage boundary</strong> is created.</li>
+                            where a <strong>stage boundary</strong> is created.
+                        </li>
                     </ul>
                     <div class="box gotcha-box">
                         <h4>⚠️ Common gotcha</h4>
                         <p>Because evaluation is lazy, an error in a transformation often only surfaces when the action
                             runs — sometimes many cells later. When debugging a customer notebook, look at the
-                            <em>action</em> that failed, then walk the plan backward.</p>
+                            <em>action</em> that failed, then walk the plan backward.
+                        </p>
                     </div>
                 </section>
 
@@ -204,7 +209,8 @@ df3.show()                                     <span class="comment"># triggers 
                         <p>A job with a <code>groupBy</code> has 2 stages: Stage 0 reads + pre-aggregates (map side),
                             then an <code>Exchange</code> shuffles, then Stage 1 finishes the aggregation (reduce side).
                             If Stage 1 has 200 tasks and 199 finish in 2s but 1 runs for 4 minutes, you are looking at
-                            <strong>data skew</strong> — the topic of Chapter 3.</p>
+                            <strong>data skew</strong> — the topic of Chapter 3.
+                        </p>
                     </div>
                 </section>
 
@@ -236,7 +242,8 @@ spark.conf.set("spark.sql.shuffle.partitions", 64)</code></pre>
                             partitions and rebalance skew. <code>coalesce(n)</code> only <em>reduces</em> partitions and
                             avoids a shuffle by merging adjacent ones — cheaper, but can create uneven partitions. Use
                             <code>coalesce</code> before writing fewer output files; use <code>repartition</code> to fix
-                            skew.</p>
+                            skew.
+                        </p>
                     </div>
                 </section>
 
@@ -288,7 +295,8 @@ spark.conf.set("spark.sql.shuffle.partitions", 64)</code></pre>
                     <ul>
                         <li><strong>Dynamically coalescing shuffle partitions:</strong> if the 200 default shuffle
                             partitions each end up tiny, AQE merges them into fewer, right-sized partitions — no manual
-                            <code>spark.sql.shuffle.partitions</code> tuning needed.</li>
+                            <code>spark.sql.shuffle.partitions</code> tuning needed.
+                        </li>
                         <li><strong>Dynamically switching join strategy:</strong> if a shuffle reveals one side is
                             actually small, AQE converts a SortMergeJoin into a BroadcastHashJoin on the fly.</li>
                         <li><strong>Dynamically handling skew:</strong> AQE detects a skewed partition (much larger than
@@ -319,15 +327,18 @@ spark.conf.set("spark.sql.adaptive.skewJoin.enabled", True)
                         Spark UI + <code>explain()</code>.</p>
                     <ol>
                         <li>Create a notebook. Generate a DataFrame:
-                            <code>df = spark.range(0, 20_000_000).withColumn("k", (col("id") % 100))</code>.</li>
+                            <code>df = spark.range(0, 20_000_000).withColumn("k", (col("id") % 100))</code>.
+                        </li>
                         <li>Run <code>agg = df.groupBy("k").count()</code> then
                             <code>agg.explain(mode="formatted")</code>. Find the <code>Exchange hashpartitioning</code>
-                            node — that is your shuffle / stage boundary.</li>
+                            node — that is your shuffle / stage boundary.
+                        </li>
                         <li>Call the action <code>agg.count()</code>. Open the <strong>Spark UI → Jobs</strong>. Confirm
                             1 job, 2 stages. Click the shuffle stage and note the number of tasks (partitions).</li>
                         <li>Force skew:
                             <code>skewed = df.withColumn("k", when(col("id") &lt; 19_000_000, lit(0)).otherwise(col("id") % 100))</code>.
-                            Group and count again.</li>
+                            Group and count again.
+                        </li>
                         <li>In the stage detail, compare task <strong>Duration</strong> and <strong>Shuffle Read
                                 Size</strong> across tasks — one task should dominate. That is skew.</li>
                         <li>Toggle <code>spark.conf.set("spark.sql.adaptive.skewJoin.enabled", True)</code> and rerun;

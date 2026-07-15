@@ -29,6 +29,7 @@
                 <li><a href="glossary.html">Glossary</a></li>
                 <li><a href="interview_question_bank.html">Q&A Bank</a></li>
                 <li><a href="mosaic_ai.html">Mosaic AI</a></li>
+                <li><a href="case_studies.html">Case Studies</a></li>
             </ul>
         </nav>
 
@@ -120,7 +121,8 @@ with mlflow.start_run(run_name="rf_baseline") as run:
                     <p>Databricks now registers models as first-class Unity Catalog objects
                         (<code>catalog.schema.model</code>), so the same RBAC, lineage, and audit you learned in Chapter
                         4 apply to models. Modern practice uses <strong>aliases</strong> (e.g. <code>@champion</code>,
-                        <code>@challenger</code>) instead of the legacy Staging/Production stages.</p>
+                        <code>@challenger</code>) instead of the legacy Staging/Production stages.
+                    </p>
                     <div class="code-label">Register a run's model and set an alias</div>
                     <pre><code>mlflow.set_registry_uri("databricks-uc")
 

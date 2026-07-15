@@ -522,6 +522,7 @@
                 <li><a href="glossary.html">Glossary</a></li>
                 <li><a href="interview_question_bank.html">Q&A Bank</a></li>
                 <li><a href="mosaic_ai.html">Mosaic AI</a></li>
+                <li><a href="case_studies.html">Case Studies</a></li>
             </ul>
         </nav>
 
@@ -533,10 +534,10 @@
                 expected outputs, common errors and fixes, architecture decision frameworks, pricing math, hands-on
                 labs, and interview Q&A with model answers. You should not need any external material to prepare.</p>
             <div class="reading-meta">
-                <span>📚 12 chapters</span>
-                <span>⏱️ ~45–55 hours of study</span>
-                <span>🧪 Hands-on labs in every chapter</span>
-                <span>🎯 110+ interview questions</span>
+                <span>📚 13 chapters</span>
+                <span>⏱️ ~50–60 hours of study</span>
+                <span>🧪 Hands-on labs and scenario drills</span>
+                <span>🎯 120+ interview questions</span>
             </div>
             <div class="pills">
                 <span class="pill pill-primary">Spark & Photon Internals</span>
@@ -547,6 +548,7 @@
                 <span class="pill">MLflow</span>
                 <span class="pill">FinOps</span>
                 <span class="pill">Mosaic AI & RAG</span>
+                <span class="pill">Customer Case Studies</span>
             </div>
         </header>
 
@@ -562,7 +564,7 @@
         <div class="grid-layout">
             <main class="main-content">
                 <section class="section-card">
-                    <h2>The 12-Chapter Curriculum</h2>
+                    <h2>The 13-Chapter Curriculum</h2>
                     <p>Chapters are ordered as a learning path — fundamentals first, then platform engineering, then
                         specialization, then interview consolidation.</p>
                     <div class="modular-grid">
@@ -674,6 +676,15 @@
                                     class="skill-tag">Genie</span><span class="skill-tag">RAG</span></div><a
                                 class="module-link" href="mosaic_ai.html">Open chapter ➔</a>
                         </div>
+                        <div class="module-card">
+                            <div class="module-eyebrow">Ch 13 · Customer Scenarios</div>
+                            <div class="module-title">Case Studies & FDE Delivery</div>
+                            <p class="module-desc">Slow ETL, Unity Catalog migration, bill spikes, streaming duplicates,
+                                RAG POCs, Genie quick wins, and Federation tradeoffs.</p>
+                            <div class="module-skills"><span class="skill-tag">Diagnostics</span><span
+                                    class="skill-tag">Tradeoffs</span><span class="skill-tag">Stakeholders</span></div>
+                            <a class="module-link" href="case_studies.html">Open chapter ➔</a>
+                        </div>
                     </div>
                 </section>
 
@@ -738,7 +749,7 @@
                     <div class="progress-percent-bar">
                         <div class="progress-percent-fill" id="progressBar"></div>
                     </div>
-                    <div class="progress-stats"><span id="completedCount">0 / 12</span><span id="percentText">0%</span>
+                    <div class="progress-stats"><span id="completedCount">0 / 13</span><span id="percentText">0%</span>
                     </div>
                     <ul class="checklist">
                         <li class="checklist-item"><input type="checkbox" id="c1" onchange="updateProgress()"><span
@@ -765,6 +776,8 @@
                                 id="t-c11">Ch11 Question Bank drill</span></li>
                         <li class="checklist-item"><input type="checkbox" id="c12" onchange="updateProgress()"><span
                                 id="t-c12">Ch12 Mosaic AI & Intelligence</span></li>
+                        <li class="checklist-item"><input type="checkbox" id="c13" onchange="updateProgress()"><span
+                                id="t-c13">Ch13 Case Studies</span></li>
                     </ul>
                 </div>
 
@@ -788,8 +801,9 @@
                         </div>
                         <div class="roadmap-step">
                             <div class="step-phase">Week 4</div>
-                            <div class="step-name">AI & Interview</div>
-                            <div class="step-desc">Chapter 12. Mosaic AI, Vector Search, Genie, Lakehouse Monitoring.
+                            <div class="step-name">AI & Scenarios</div>
+                            <div class="step-desc">Chapters 12–13. Mosaic AI, Vector Search, Genie, and customer case
+                                studies.
                             </div>
                         </div>
                         <div class="roadmap-step">
@@ -805,7 +819,7 @@
     </div>
 
     <script>
-        const items = ['c1', 'c2', 'c3', 'c4', 'c5', 'c6', 'c7', 'c8', 'c9', 'c10', 'c11', 'c12'];
+        const items = ['c1', 'c2', 'c3', 'c4', 'c5', 'c6', 'c7', 'c8', 'c9', 'c10', 'c11', 'c12', 'c13'];
         window.addEventListener('DOMContentLoaded', () => {
             items.forEach(id => {
                 const checked = localStorage.getItem('fde_' + id) === 'true';

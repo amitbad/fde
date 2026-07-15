@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ch 13 · Case Studies & Customer Scenarios — FDE Mastery</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect x='10' y='10' width='80' height='80' rx='15' fill='%23ff5a36'/><path d='M30 50 L45 65 L70 35' stroke='white' stroke-width='8' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="container">
+
+    <nav class="navbar">
+        <div class="brand">Databricks <span>FDE</span> Mastery</div>
+        <ul class="nav-links">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="architecture_and_pricing.html">Architecture</a></li>
+            <li><a href="spark_internals.html">Spark Internals</a></li>
+            <li><a href="performance_tuning.html">Performance</a></li>
+            <li><a href="unity_catalog_and_security.html">Governance</a></li>
+            <li><a href="delta_live_tables.html">DLT</a></li>
+            <li><a href="streaming.html">Streaming</a></li>
+            <li><a href="iac_and_ci_cd.html">IaC & CI/CD</a></li>
+            <li><a href="mlflow.html">MLflow</a></li>
+            <li><a href="cost_governance.html">Cost/FinOps</a></li>
+            <li><a href="glossary.html">Glossary</a></li>
+            <li><a href="interview_question_bank.html">Q&A Bank</a></li>
+            <li><a href="mosaic_ai.html">Mosaic AI</a></li>
+            <li><a href="case_studies.html" class="active">Case Studies</a></li>
+        </ul>
+    </nav>
+
+    <header class="content-header">
+        <div class="eyebrow">Chapter 13 · Customer Delivery Scenarios</div>
+        <h1>Case Studies & FDE Customer Scenarios</h1>
+        <p>Real FDE interviews and customer work are rarely about memorizing one default value. They test whether you can diagnose messy systems, pick tradeoffs, communicate with stakeholders, and turn Databricks features into business outcomes.</p>
+        <div class="reading-meta"><span>⏱️ ~4 hours</span><span>🧪 8 scenario drills</span><span>🎯 12 interview questions</span><span class="badge badge-free" style="margin:0">Conceptual FREE</span></div>
+    </header>
+
+    <div class="grid-layout">
+        <main class="main-content">
+            <section class="section-card anchor-offset" id="framework">
+                <span class="badge badge-free">Interview framing</span>
+                <h2>13.1 The FDE Case Study Framework</h2>
+                <p>Use this pattern for almost every customer scenario. It keeps your answer structured and prevents jumping straight to random configs.</p>
+                <ol>
+                    <li><strong>Clarify the business impact:</strong> SLA missed, bill increased, audit blocked, POC delayed, analysts waiting, or executives losing trust.</li>
+                    <li><strong>Establish current state:</strong> workspace tier, compute type, data size, table layout, job schedule, ownership, security model, and cost baseline.</li>
+                    <li><strong>Inspect evidence:</strong> Spark UI, query profile, system tables, audit logs, DLT event logs, cluster metrics, lineage, and failed records.</li>
+                    <li><strong>Find the dominant bottleneck:</strong> skew, spill, small files, scan volume, inefficient joins, over-provisioned compute, governance gaps, or unclear semantics.</li>
+                    <li><strong>Recommend the smallest safe fix first:</strong> change one or two high-confidence levers, measure before and after, then automate.</li>
+                    <li><strong>Convert the fix into a repeatable pattern:</strong> dashboards, policies, DABs, runbooks, alerts, and stakeholder-facing success metrics.</li>
+                </ol>
+                <div class="box decision-box">
+                    <h4>Answer shape in interviews</h4>
+                    <p>Start with discovery, then diagnostics, then remediation, then prevention. Interviewers trust candidates who say what they would measure before saying what they would change.</p>
+                </div>
+            </section>
+
+            <section class="section-card anchor-offset" id="etl-slowdown">
+                <span class="badge badge-mixed">Spark + cost + stakeholder communication</span>
+                <h2>13.2 Case Study — Nightly ETL Runs 6 Hours and Misses SLA</h2>
+                <h3>Customer situation</h3>
+                <p>A retail customer has a nightly sales aggregation job scheduled at 1 AM. It used to finish in 90 minutes, now takes 6 hours and blocks dashboards used by regional managers at 8 AM.</p>
+                <h3>Discovery questions</h3>
+                <ul>
+                    <li>What changed recently: data volume, schema, cluster policy, join logic, source system, or table layout?</li>
+                    <li>Is the workload CPU-bound, shuffle-bound, IO-bound, or waiting for cloud storage/listing?</li>
+                    <li>Are slow stages tied to one large join, one aggregation, or many small file reads?</li>
+                    <li>Does the job have an SLA and what business process fails if it misses?</li>
+                </ul>
+                <h3>Evidence to inspect</h3>
+                <ul>
+                    <li><strong>Spark UI:</strong> stage duration, shuffle read/write, spill, skewed task duration, executor lost events.</li>
+                    <li><strong>Query profile:</strong> join strategy, scan rows, predicate pushdown, Photon usage, broadcast decisions.</li>
+                    <li><strong>Delta history:</strong> file counts, OPTIMIZE history, table growth, schema evolution, ZORDER or Liquid Clustering status.</li>
+                    <li><strong>Billing/system tables:</strong> DBU spend per job run and whether cluster size increased without reducing duration.</li>
+                </ul>
+                <h3>Likely root causes</h3>
+                <ul>
+                    <li><strong>Skew:</strong> one region, customer, tenant, or null key dominates a join or aggregation.</li>
+                    <li><strong>Small files:</strong> millions of tiny files make metadata and scan overhead dominate.</li>
+                    <li><strong>Bad join strategy:</strong> Spark shuffles both large tables when a dimension could be broadcast.</li>
+                    <li><strong>Over-partitioning or under-partitioning:</strong> default partition counts are not aligned with actual data and cluster shape.</li>
+                </ul>
+                <h3>FDE recommendation</h3>
+                <ol>
+                    <li>Capture a baseline: runtime, DBU cost, slowest stages, shuffle bytes, spill bytes, and output row count.</li>
+                    <li>Enable Photon and AQE if not already enabled and validate compatibility.</li>
+                    <li>If small files dominate, run <code>OPTIMIZE</code> or enable Predictive Optimization for UC-managed tables.</li>
+                    <li>If skew dominates, isolate top skew keys and apply salting, skew hints, or pre-aggregation.</li>
+                    <li>If a small dimension is shuffled, broadcast it explicitly or tune table stats so Spark chooses broadcast.</li>
+                    <li>Publish before/after metrics and add a runbook explaining the chosen fix.</li>
+                </ol>
+                <div class="box strategy-box">
+                    <h4>Strong FDE answer</h4>
+                    <p>I would not start by setting <code>spark.sql.shuffle.partitions</code> blindly. I would first inspect whether the slow stage is skew, spill, small-file scan, or join strategy. Config changes come after evidence.</p>
+                </div>
+            </section>
+
+            <section class="section-card anchor-offset" id="uc-migration">
+                <span class="badge badge-paid">Governance + migration</span>
+                <h2>13.3 Case Study — Unity Catalog Migration from Mounts</h2>
+                <h3>Customer situation</h3>
+                <p>A financial services customer uses DBFS mounts with shared service principals. Security wants Unity Catalog before a production expansion, but data teams fear breaking hundreds of notebooks.</p>
+                <h3>Key risks</h3>
+                <ul>
+                    <li><strong>Access breakage:</strong> notebooks rely on mount paths and workspace-local permissions.</li>
+                    <li><strong>Credential sprawl:</strong> secrets are spread across notebooks, jobs, and legacy scopes.</li>
+                    <li><strong>Ownership confusion:</strong> tables exist without clear data owners or grants.</li>
+                    <li><strong>Audit gap:</strong> shared credentials hide which user accessed sensitive data.</li>
+                </ul>
+                <h3>Migration plan</h3>
+                <ol>
+                    <li>Inventory mounts, external paths, table dependencies, job owners, and notebook references.</li>
+                    <li>Design catalog/schema hierarchy by domain, environment, and sensitivity.</li>
+                    <li>Create storage credentials, external locations, managed locations, and groups through Terraform.</li>
+                    <li>Migrate read paths from <code>/mnt/...</code> to <code>catalog.schema.table</code> or volumes.</li>
+                    <li>Apply row filters and column masks for sensitive fields before production cutover.</li>
+                    <li>Run dual validation: row counts, checksums, lineage, and sample business queries.</li>
+                    <li>Freeze new mount creation and publish a developer migration guide.</li>
+                </ol>
+                <div class="box gotcha-box">
+                    <h4>Common mistake</h4>
+                    <p>Do not make every engineer a metastore admin just to unblock migration. Use domain groups, ownership, grants, and break-glass admin access.</p>
+                </div>
+            </section>
+
+            <section class="section-card anchor-offset" id="bill-spike">
+                <span class="badge badge-mixed">FinOps + operations</span>
+                <h2>13.4 Case Study — Databricks Bill Doubled Overnight</h2>
+                <h3>Customer situation</h3>
+                <p>The CFO escalates because Databricks spend doubled in one week. Engineering says workloads are unchanged. The customer wants immediate savings without breaking production.</p>
+                <h3>Investigation path</h3>
+                <ul>
+                    <li>Query <code>system.billing.usage</code> by workspace, SKU, job, cluster, user, and custom tags.</li>
+                    <li>Compare current week to previous four weeks by DBU, cloud VM cost, SQL warehouse cost, and serverless usage.</li>
+                    <li>Check for all-purpose clusters left running, SQL warehouses without auto-stop, and jobs retried in loops.</li>
+                    <li>Correlate expensive jobs with runtime, input data volume, and failed/retried task counts.</li>
+                </ul>
+                <h3>Immediate containment</h3>
+                <ol>
+                    <li>Stop idle all-purpose clusters and enforce autotermination.</li>
+                    <li>Apply cluster policies with max workers, allowed node types, Photon defaults, and mandatory tags.</li>
+                    <li>Set SQL warehouse auto-stop and review serverless warehouse sizing.</li>
+                    <li>Move repeatable production jobs from interactive clusters to Jobs compute.</li>
+                    <li>Create budget alerts and daily spend anomaly dashboards.</li>
+                </ol>
+                <h3>Long-term fix</h3>
+                <ul>
+                    <li><strong>Chargeback:</strong> map every workload to team, product, environment, and owner.</li>
+                    <li><strong>Optimization:</strong> tune the top five expensive jobs before touching low-spend workloads.</li>
+                    <li><strong>Governance:</strong> require tags and restrict expensive compute choices through policies.</li>
+                    <li><strong>Education:</strong> publish a cost playbook for developers and analysts.</li>
+                </ul>
+            </section>
+
+            <section class="section-card anchor-offset" id="streaming-duplicates">
+                <span class="badge badge-mixed">Streaming + reliability</span>
+                <h2>13.5 Case Study — Streaming Job Creates Duplicate Records</h2>
+                <h3>Customer situation</h3>
+                <p>A near-real-time ingestion pipeline uses Auto Loader and writes to Delta. Downstream users report duplicate orders after a source outage and replay.</p>
+                <h3>Likely causes</h3>
+                <ul>
+                    <li>Checkpoint path was deleted or changed, causing files to be processed again.</li>
+                    <li>Sink write is append-only without idempotent merge logic.</li>
+                    <li>Source emits updates or late corrections but pipeline treats all events as new rows.</li>
+                    <li>Watermark is too aggressive or missing, causing wrong state handling.</li>
+                </ul>
+                <h3>FDE remediation</h3>
+                <ol>
+                    <li>Stop the pipeline and preserve checkpoint, input files, and target table history.</li>
+                    <li>Identify duplicate keys and replay window using Delta time travel.</li>
+                    <li>Repair target with a deterministic dedupe rule: latest event timestamp, highest version, or source sequence number.</li>
+                    <li>Change the sink to idempotent <code>MERGE</code> or DLT <code>APPLY CHANGES</code> for CDC-style sources.</li>
+                    <li>Lock checkpoint path conventions through DABs and environment-specific config.</li>
+                    <li>Add alerts for duplicate rate, input backlog, and late-arriving event volume.</li>
+                </ol>
+                <div class="box decision-box">
+                    <h4>Interview signal</h4>
+                    <p>Exactly-once is an end-to-end design property, not a magic checkbox. Checkpointing helps, but the sink must be idempotent when sources can replay data.</p>
+                </div>
+            </section>
+
+            <section class="section-card anchor-offset" id="rag-poc">
+                <span class="badge badge-paid">AI + delivery</span>
+                <h2>13.6 Case Study — Two-Week RAG POC for Internal Knowledge</h2>
+                <h3>Customer situation</h3>
+                <p>A customer wants a chatbot over policy documents, runbooks, and internal wiki pages. Leadership wants a demo in two weeks, but security requires access controls and auditability.</p>
+                <h3>Architecture</h3>
+                <div class="diagram">Documents → Bronze Delta → Clean/chunk Silver Table → Vector Search Index
+        │                                                       │
+        └──────────── Unity Catalog permissions + lineage ──────┘
+                                │
+User question → retrieve top-K chunks → Foundation Model API → Databricks App</div>
+                <h3>Delivery plan</h3>
+                <ol>
+                    <li>Pick one high-value corpus and define success criteria: answer accuracy, citation quality, latency, and adoption.</li>
+                    <li>Ingest documents into Delta with source URL, owner, sensitivity label, and last modified timestamp.</li>
+                    <li>Chunk documents with consistent chunk size and overlap; keep chunk metadata for citations.</li>
+                    <li>Create a Vector Search Delta Sync index in TRIGGERED mode for daily-updated documents.</li>
+                    <li>Use FMAPI pay-per-token for the POC; avoid provisioned throughput until traffic is proven.</li>
+                    <li>Deploy a Streamlit app using Databricks Apps and log every question, retrieved chunk ID, model, latency, and user feedback.</li>
+                    <li>Run an eval set of 50 real questions with expected citations before calling the POC successful.</li>
+                </ol>
+                <div class="box gotcha-box">
+                    <h4>Security question to ask early</h4>
+                    <p>Should users only retrieve chunks they are authorized to read? If yes, design row-level filtering and metadata filtering before the demo, not after.</p>
+                </div>
+            </section>
+
+            <section class="section-card anchor-offset" id="genie-quick-win">
+                <span class="badge badge-paid">AI/BI + stakeholder trust</span>
+                <h2>13.7 Case Study — Business Wants Natural Language Analytics</h2>
+                <h3>Customer situation</h3>
+                <p>Sales leadership wants to ask questions in plain English instead of waiting for analysts. The data team has gold tables, but KPI definitions are inconsistent across dashboards.</p>
+                <h3>FDE approach</h3>
+                <ol>
+                    <li>Select a narrow domain: sales pipeline, bookings, renewals, or support tickets.</li>
+                    <li>Point Genie only to curated gold tables, not raw bronze/silver tables.</li>
+                    <li>Write instructions for KPI definitions, fiscal calendar, default filters, and business synonyms.</li>
+                    <li>Add verified questions for the top 20 executive queries.</li>
+                    <li>Validate generated SQL with analysts and mark trusted answers.</li>
+                    <li>Use UC row filters and column masks so executives and regional managers see only permitted data.</li>
+                </ol>
+                <div class="box strategy-box">
+                    <h4>Why this is FDE-relevant</h4>
+                    <p>A Genie Space can be a week-one credibility win. It shows business value quickly while you continue hardening pipelines, governance, and cost controls underneath.</p>
+                </div>
+            </section>
+
+            <section class="section-card anchor-offset" id="federation">
+                <span class="badge badge-paid">Migration + architecture tradeoff</span>
+                <h2>13.8 Case Study — Query Operational DB Without ETL</h2>
+                <h3>Customer situation</h3>
+                <p>A customer wants Databricks dashboards over PostgreSQL operational data this week. The source team refuses a new ETL pipeline until the data model is proven.</p>
+                <h3>Recommendation</h3>
+                <ul>
+                    <li><strong>Use Lakehouse Federation first</strong> for exploration, stakeholder demos, and low-volume reporting.</li>
+                    <li><strong>Move to Delta ingestion</strong> when workloads become performance-critical, high-concurrency, ML-feature-driven, or source-SLA-sensitive.</li>
+                    <li><strong>Keep governance in UC</strong> so access can be managed consistently while data remains in the source.</li>
+                </ul>
+                <h3>Decision table</h3>
+                <div class="table-scroll">
+                    <table>
+                        <thead><tr><th>Need</th><th>Federation</th><th>Ingest to Delta</th></tr></thead>
+                        <tbody>
+                            <tr><td>Fast POC</td><td>Best fit</td><td>Slower setup</td></tr>
+                            <tr><td>High concurrency dashboard</td><td>May overload source</td><td>Best fit</td></tr>
+                            <tr><td>ML feature engineering</td><td>Weak fit</td><td>Best fit</td></tr>
+                            <tr><td>Source data must not move</td><td>Best fit</td><td>Not acceptable</td></tr>
+                            <tr><td>Historical replay</td><td>Limited</td><td>Best fit</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section class="section-card anchor-offset" id="scenario-drills">
+                <span class="badge badge-free">Practice drills</span>
+                <h2>13.9 Scenario Drills</h2>
+                <p>Use these drills out loud. Give yourself five minutes per scenario and answer using discovery, diagnostics, remediation, prevention, and stakeholder communication.</p>
+                <details class="qa"><summary><span class="q-text">A production job fails only on month-end when data volume spikes 5x. What do you do?</span></summary><div class="qa-body"><div class="tell"><strong>Testing:</strong> reliability and scale thinking.</div>Check whether failure is memory spill, executor loss, source throttling, shuffle explosion, or timeout. Compare month-end run metrics to normal days. Fix the dominant bottleneck, then add backfill-safe retry strategy, autoscaling boundaries, alerts, and a load-test using month-end-like data before the next cycle.</div></details>
+                <details class="qa"><summary><span class="q-text">A customer asks you to make every pipeline serverless. How do you respond?</span></summary><div class="qa-body"><div class="tell"><strong>Testing:</strong> product judgement, not feature excitement.</div>I would evaluate workload type, compliance requirements, startup latency, library needs, networking, cost predictability, and operational burden. Serverless can reduce ops and idle cost, but classic compute may be better for strict network controls, custom libraries, or predictable long-running workloads.</div></details>
+                <details class="qa"><summary><span class="q-text">A customer wants all raw data accessible to analysts for speed. What risk do you flag?</span></summary><div class="qa-body"><div class="tell"><strong>Testing:</strong> governance and customer management.</div>Raw access can leak PII, create inconsistent metrics, and bypass quality controls. I would propose curated gold views, UC groups, row filters, column masks, and a fast request path for new datasets instead of unrestricted bronze access.</div></details>
+                <details class="qa"><summary><span class="q-text">A pipeline has 10,000 small files per day. Is the answer always OPTIMIZE?</span></summary><div class="qa-body"><div class="tell"><strong>Testing:</strong> nuance around heuristics.</div>Not always. First check table size, query pattern, write frequency, latency requirement, and whether Predictive Optimization can manage it. For streaming sinks, compaction timing must avoid fighting active writes. OPTIMIZE is useful when read overhead is material and file compaction cost is justified.</div></details>
+                <details class="qa"><summary><span class="q-text">A VP wants a RAG chatbot, but source documents have no ownership or ACLs. What do you say?</span></summary><div class="qa-body"><div class="tell"><strong>Testing:</strong> AI governance.</div>I would not expose the chatbot broadly until document ownership, classification, and access rules are clear. Start with a restricted corpus, log retrievals, include citations, and ensure the app only retrieves chunks the user is authorized to read.</div></details>
+            </section>
+
+            <section class="section-card anchor-offset" id="qa">
+                <h2>13.10 Interview Questions & Model Answers</h2>
+                <details class="qa"><summary><span class="q-text">How do you explain the difference between a Databricks developer and an FDE?</span></summary><div class="qa-body"><div class="tell"><strong>Testing:</strong> role clarity.</div>A developer can build notebooks or pipelines. An FDE must diagnose ambiguous customer problems, design production architecture, manage cost and governance, communicate tradeoffs to executives, and leave behind repeatable systems like IaC, runbooks, dashboards, and operating models.</div></details>
+                <details class="qa"><summary><span class="q-text">When should you mention Spark defaults in a case interview?</span></summary><div class="qa-body"><div class="tell"><strong>Testing:</strong> depth without trivia.</div>Mention defaults as heuristics after you have identified the bottleneck. For example, <code>spark.sql.shuffle.partitions</code> defaulting to 200 is useful context, but the real answer is to inspect shuffle size, task count, core count, skew, and AQE behavior before changing it.</div></details>
+                <details class="qa"><summary><span class="q-text">A customer asks for the fastest possible fix. How do you avoid creating long-term debt?</span></summary><div class="qa-body"><div class="tell"><strong>Testing:</strong> pragmatic delivery.</div>I separate containment from remediation. First stabilize the SLA with a low-risk fix. Then schedule hardening: tests, DABs, ownership, monitoring, cost controls, and documentation. I explicitly tell stakeholders which part is a temporary mitigation and which part is the durable solution.</div></details>
+                <details class="qa"><summary><span class="q-text">How do you prove your optimization worked?</span></summary><div class="qa-body"><div class="tell"><strong>Testing:</strong> measurement discipline.</div>Define baseline metrics before the change: runtime, DBU cost, cloud cost, rows processed, shuffle bytes, spill, failed tasks, SLA miss rate, and business availability. After the change, compare the same metrics over multiple runs and publish the result in a dashboard or summary.</div></details>
+                <details class="qa"><summary><span class="q-text">How do you handle disagreement between security and data engineering teams?</span></summary><div class="qa-body"><div class="tell"><strong>Testing:</strong> stakeholder navigation.</div>I translate both sides into requirements. Security needs auditability, least privilege, and policy enforcement. Engineering needs speed and fewer blockers. Unity Catalog groups, external locations, row filters, masks, and self-service request flows can satisfy both if designed with clear ownership.</div></details>
+            </section>
+
+            <div class="page-nav">
+                <a href="mosaic_ai.html"><div class="dir">◀ Previous</div><div class="pg-title">Ch 12 · Mosaic AI</div></a>
+                <a class="next" href="index.html"><div class="dir">Back to ▶</div><div class="pg-title">Home / Curriculum</div></a>
+            </div>
+        </main>
+
+        <aside class="sidebar-panel">
+            <div class="side-card">
+                <h3>On This Page</h3>
+                <ul class="toc">
+                    <li><a href="#framework">13.1 FDE Framework</a></li>
+                    <li><a href="#etl-slowdown">13.2 Slow ETL</a></li>
+                    <li><a href="#uc-migration">13.3 UC Migration</a></li>
+                    <li><a href="#bill-spike">13.4 Bill Spike</a></li>
+                    <li><a href="#streaming-duplicates">13.5 Streaming Duplicates</a></li>
+                    <li><a href="#rag-poc">13.6 RAG POC</a></li>
+                    <li><a href="#genie-quick-win">13.7 Genie Quick Win</a></li>
+                    <li><a href="#federation">13.8 Federation vs ETL</a></li>
+                    <li><a href="#scenario-drills">13.9 Scenario Drills</a></li>
+                    <li><a href="#qa">13.10 Interview Q&A</a></li>
+                </ul>
+            </div>
+            <div class="side-card">
+                <h3>FDE Case Answer</h3>
+                <p><strong>Clarify:</strong> business impact and current state.</p>
+                <p><strong>Inspect:</strong> Spark UI, query profile, system tables, logs, lineage.</p>
+                <p><strong>Decide:</strong> smallest safe fix based on evidence.</p>
+                <p><strong>Prove:</strong> baseline versus after metrics.</p>
+                <p><strong>Operationalize:</strong> IaC, policies, alerts, dashboards, runbooks.</p>
+            </div>
+            <div class="side-card">
+                <h3>Do Not Over-Index On</h3>
+                <ul class="checklist">
+                    <li class="checklist-item"><input type="checkbox"><span>Memorizing defaults without knowing when they matter</span></li>
+                    <li class="checklist-item"><input type="checkbox"><span>Adding nodes before reading the Spark UI</span></li>
+                    <li class="checklist-item"><input type="checkbox"><span>Recommending new features without migration risk analysis</span></li>
+                    <li class="checklist-item"><input type="checkbox"><span>Ignoring business SLA, cost, and stakeholder trust</span></li>
+                </ul>
+            </div>
+        </aside>
+    </div>
+
+</div>
+</body>
+</html>
