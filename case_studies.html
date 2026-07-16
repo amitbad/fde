@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ch 12 · Case Studies & Customer Scenarios — FDE Mastery</title>
+    <title>Ch 11 · Case Studies & Customer Scenarios — FDE Mastery</title>
     <link rel="icon" type="image/svg+xml"
         href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect x='10' y='10' width='80' height='80' rx='15' fill='%23ff5a36'/><path d='M30 50 L45 65 L70 35' stroke='white' stroke-width='8' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>">
     <link rel="stylesheet" href="styles.css">
@@ -26,15 +26,15 @@
                 <li><a href="iac_and_ci_cd.html">IaC & CI/CD</a></li>
                 <li><a href="mlflow.html">MLflow</a></li>
                 <li><a href="cost_governance.html">Cost/FinOps</a></li>
-                <li><a href="glossary.html">Glossary</a></li>
                 <li><a href="mosaic_ai.html">Mosaic AI</a></li>
                 <li><a href="case_studies.html" class="active">Case Studies</a></li>
+                <li><a href="glossary.html">Glossary</a></li>
                 <li><a href="interview_question_bank.html">Q&A Bank</a></li>
             </ul>
         </nav>
 
         <header class="content-header">
-            <div class="eyebrow">Chapter 12 · Customer Delivery Scenarios</div>
+            <div class="eyebrow">Chapter 11 · Customer Delivery Scenarios</div>
             <h1>Case Studies & FDE Customer Scenarios</h1>
             <p>Real FDE interviews and customer work are rarely about memorizing one default value. They test whether
                 you can diagnose messy systems, pick tradeoffs, communicate with stakeholders, and turn Databricks
@@ -47,7 +47,7 @@
             <main class="main-content">
                 <section class="section-card anchor-offset" id="framework">
                     <span class="badge badge-free">Interview framing</span>
-                    <h2>12.1 The FDE Case Study Framework</h2>
+                    <h2>11.1 The FDE Case Study Framework</h2>
                     <p>Use this pattern for almost every customer scenario. It keeps your answer structured and prevents
                         jumping straight to random configs.</p>
                     <ol>
@@ -73,7 +73,7 @@
 
                 <section class="section-card anchor-offset" id="etl-slowdown">
                     <span class="badge badge-mixed">Spark + cost + stakeholder communication</span>
-                    <h2>12.2 Case Study — Nightly ETL Runs 6 Hours and Misses SLA</h2>
+                    <h2>11.2 Case Study — Nightly ETL Runs 6 Hours and Misses SLA</h2>
                     <h3>Customer situation</h3>
                     <p>A retail customer has a nightly sales aggregation job scheduled at 1 AM. It used to finish in 90
                         minutes, now takes 6 hours and blocks dashboards used by regional managers at 8 AM.</p>
@@ -131,7 +131,7 @@
 
                 <section class="section-card anchor-offset" id="uc-migration">
                     <span class="badge badge-paid">Governance + migration</span>
-                    <h2>12.3 Case Study — Unity Catalog Migration from Mounts</h2>
+                    <h2>11.3 Case Study — Unity Catalog Migration from Mounts</h2>
                     <h3>Customer situation</h3>
                     <p>A financial services customer uses DBFS mounts with shared service principals. Security wants
                         Unity Catalog before a production expansion, but data teams fear breaking hundreds of notebooks.
@@ -167,7 +167,7 @@
 
                 <section class="section-card anchor-offset" id="bill-spike">
                     <span class="badge badge-mixed">FinOps + operations</span>
-                    <h2>12.4 Case Study — Databricks Bill Doubled Overnight</h2>
+                    <h2>11.4 Case Study — Databricks Bill Doubled Overnight</h2>
                     <h3>Customer situation</h3>
                     <p>The CFO escalates because Databricks spend doubled in one week. Engineering says workloads are
                         unchanged. The customer wants immediate savings without breaking production.</p>
@@ -205,7 +205,7 @@
 
                 <section class="section-card anchor-offset" id="streaming-duplicates">
                     <span class="badge badge-mixed">Streaming + reliability</span>
-                    <h2>12.5 Case Study — Streaming Job Creates Duplicate Records</h2>
+                    <h2>11.5 Case Study — Streaming Job Creates Duplicate Records</h2>
                     <h3>Customer situation</h3>
                     <p>A near-real-time ingestion pipeline uses Auto Loader and writes to Delta. Downstream users report
                         duplicate orders after a source outage and replay.</p>
@@ -236,7 +236,7 @@
 
                 <section class="section-card anchor-offset" id="rag-poc">
                     <span class="badge badge-paid">AI + delivery</span>
-                    <h2>12.6 Case Study — Two-Week RAG POC for Internal Knowledge</h2>
+                    <h2>11.6 Case Study — Two-Week RAG POC for Internal Knowledge</h2>
                     <h3>Customer situation</h3>
                     <p>A customer wants a chatbot over policy documents, runbooks, and internal wiki pages. Leadership
                         wants a demo in two weeks, but security requires access controls and auditability.</p>
@@ -271,7 +271,7 @@
 
                 <section class="section-card anchor-offset" id="genie-quick-win">
                     <span class="badge badge-paid">AI/BI + stakeholder trust</span>
-                    <h2>12.7 Case Study — Business Wants Natural Language Analytics</h2>
+                    <h2>11.7 Case Study — Business Wants Natural Language Analytics</h2>
                     <h3>Customer situation</h3>
                     <p>Sales leadership wants to ask questions in plain English instead of waiting for analysts. The
                         data team has gold tables, but KPI definitions are inconsistent across dashboards.</p>
@@ -295,7 +295,7 @@
 
                 <section class="section-card anchor-offset" id="federation">
                     <span class="badge badge-paid">Migration + architecture tradeoff</span>
-                    <h2>12.8 Case Study — Query Operational DB Without ETL</h2>
+                    <h2>11.8 Case Study — Query Operational DB Without ETL</h2>
                     <h3>Customer situation</h3>
                     <p>A customer wants Databricks dashboards over PostgreSQL operational data this week. The source
                         team refuses a new ETL pipeline until the data model is proven.</p>
@@ -351,7 +351,7 @@
 
                 <section class="section-card anchor-offset" id="scenario-drills">
                     <span class="badge badge-free">Practice drills</span>
-                    <h2>12.9 Scenario Drills</h2>
+                    <h2>11.9 Scenario Drills</h2>
                     <p>Use these drills out loud. Give yourself five minutes per scenario and answer using discovery,
                         diagnostics, remediation, prevention, and stakeholder communication.</p>
                     <details class="qa">
@@ -410,7 +410,7 @@
                 </section>
 
                 <section class="section-card anchor-offset" id="qa">
-                    <h2>12.10 Interview Questions & Model Answers</h2>
+                    <h2>11.10 Interview Questions & Model Answers</h2>
                     <details class="qa">
                         <summary><span class="q-text">How do you explain the difference between a Databricks developer
                                 and an FDE?</span></summary>
@@ -467,11 +467,11 @@
                 <div class="page-nav">
                     <a href="mosaic_ai.html">
                         <div class="dir">◀ Previous</div>
-                        <div class="pg-title">Ch 11 · Mosaic AI</div>
+                        <div class="pg-title">Ch 10 · Mosaic AI</div>
                     </a>
-                    <a class="next" href="interview_question_bank.html">
+                    <a class="next" href="glossary.html">
                         <div class="dir">Next ▶</div>
-                        <div class="pg-title">Ch 13 · Q&A Bank</div>
+                        <div class="pg-title">Ch 12 · Glossary</div>
                     </a>
                 </div>
             </main>
@@ -480,16 +480,16 @@
                 <div class="side-card">
                     <h3>On This Page</h3>
                     <ul class="toc">
-                        <li><a href="#framework">12.1 FDE Framework</a></li>
-                        <li><a href="#etl-slowdown">12.2 Slow ETL</a></li>
-                        <li><a href="#uc-migration">12.3 UC Migration</a></li>
-                        <li><a href="#bill-spike">12.4 Bill Spike</a></li>
-                        <li><a href="#streaming-duplicates">12.5 Streaming Duplicates</a></li>
-                        <li><a href="#rag-poc">12.6 RAG POC</a></li>
-                        <li><a href="#genie-quick-win">12.7 Genie Quick Win</a></li>
-                        <li><a href="#federation">12.8 Federation vs ETL</a></li>
-                        <li><a href="#scenario-drills">12.9 Scenario Drills</a></li>
-                        <li><a href="#qa">12.10 Interview Q&A</a></li>
+                        <li><a href="#framework">11.1 FDE Framework</a></li>
+                        <li><a href="#etl-slowdown">11.2 Slow ETL</a></li>
+                        <li><a href="#uc-migration">11.3 UC Migration</a></li>
+                        <li><a href="#bill-spike">11.4 Bill Spike</a></li>
+                        <li><a href="#streaming-duplicates">11.5 Streaming Duplicates</a></li>
+                        <li><a href="#rag-poc">11.6 RAG POC</a></li>
+                        <li><a href="#genie-quick-win">11.7 Genie Quick Win</a></li>
+                        <li><a href="#federation">11.8 Federation vs ETL</a></li>
+                        <li><a href="#scenario-drills">11.9 Scenario Drills</a></li>
+                        <li><a href="#qa">11.10 Interview Q&A</a></li>
                     </ul>
                 </div>
                 <div class="side-card">
